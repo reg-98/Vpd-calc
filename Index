@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VPD Calculator</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      padding: 20px;
+      background: #f0f4f8;
+      color: #222;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    p {
+      text-align: center;
+      font-size: 14px;
+      margin-top: -10px;
+      margin-bottom: 20px;
+    }
+    input, button, select {
+      display: block;
+      width: 100%;
+      max-width: 300px;
+      margin: 10px auto;
+      padding: 12px;
+      font-size: 18px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #007aff;
+      color: white;
+      border: none;
+    }
+    #result {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    .good {
+      color: green;
+    }
+    .bad {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <h1>VPD Calculator</h1>
+  <p>Assumes leaf temp is 0.5°C below air temp</p>
+
+  <label for="stage">Plant Stage:</label>
+  <select id="stage">
+    <option value="veg">Vegetative</option>
+    <option value="early">Early Flower</option>
+    <option value="midlate">Mid/Late Flower</option>
+  </select>
+
+  <input type="number" id="airTemp" placeholder="Air Temp (°C)" step="0.1" />
+  <input type="number" id="humidity" placeholder="Relative Humidity (%)" step="0.1" />
+  <button onclick="calculateVPD()">Calculate VPD</button>
+  <div id="result"></div>
+
+  <script>
+    function saturationVP(temp) {
+      return 0.6108 * Math.exp((17.27 * temp) / (temp + 237.3));
+    }
+
+    function calculateVPD() {
+      const airTemp = parseFloat(document.getElementById("airTemp").value);
+      const RH = parseFloat(document.getElementById("humidity").value);
+      const stage = document.getElementById("stage").value;
+
+      if (isNaN(airTemp) || isNaN(RH)) {
+        document.getElementById("result").textContent = "Please enter both values.";
+        return;
+      }
+
+      const leafTemp = airTemp - 0.5;
+      const SVP = saturationVP(leafTemp);
+      const AVP = (RH / 100) * saturationVP(airTemp);
+      const VPD = SVP - AVP;
+
+      const vpdRounded = Math.round(VPD * 100) / 100;
+
+      let isGood = false;
+      if (stage === "veg") {
+        isGood = VPD >= 0.8 && VPD <= 1.3;
+      } else if (stage === "early") {
+        isGood = VPD >= 1.2 && VPD <= 1.5;
+      } else if (stage === "midlate") {
+        isGood = VPD >= 1.4 && VPD <= 1.6;
+      }
+
+      const colorClass = isGood ? "good" : "bad";
+      const message = isGood ? "✔ VPD is optimal" : "⚠ VPD out of range";
+
+      document.getElementById("result").innerHTML = 
+        `VPD: <span class="${colorClass}">${vpdRounded} kPa</span><br>${message}`;
+    }
+  </script>
+</body>
+</html>
