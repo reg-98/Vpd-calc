@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🌿 Live Grow Room VPD Monitor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: #111;
+      color: #fff;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+    h1 {
+      text-align: center;
+      color: #90ee90;
+    }
+    label {
+      font-weight: bold;
+      margin-top: 10px;
+      display: block;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: none;
+      font-size: 16px;
+    }
+    input {
+      background: #222;
+      color: #fff;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      margin-top: 15px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .output, .warning, .success {
+      margin-top: 20px;
+      padding: 15px;
+      border-left: 4px solid;
+    }
+    .output { background: #1e1e1e; border-color: #4CAF50; }
+    .warning { background: #330000; border-color: red; color: #ff7777; }
+    .success { background: #002b00; border-color: #00ff80; color: #00ff80; }
+  </style>
+</head>
+<body>
+  <h1>🌿 Live Grow Room VPD Monitor</h1>
+
+  <label for="startDate">Grow Start Date</label>
+  <input type="date" id="startDate" />
+
+  <label for="temp">Air Temp (°C)</label>
+  <input type="number" id="temp" step="0.1" placeholder="e.g. 25.0" />
+
+  <label for="rh">Humidity (% RH)</label>
+  <input type="number" id="rh" step="0.1" placeholder="e.g. 55.0" />
+
+  <button onclick="calculateVPD()">Calculate VPD</button>
+
+  <div id="growthStage" class="output"></div>
+  <div id="vpdResult" class="output"></div>
+  <div id="vpdWarning" class="warning" style="display:none;"></div>
+
+  <script>
+    function calculateVPD() {
+      const temp = parseFloat(document.getElementById("temp").value);
+      const rh = parseFloat(document.getElementById("rh").value);
+      const leafTempDiff = 0.5;
+      const leafTemp = temp - leafTempDiff;
+
+      if (isNaN(temp) || isNaN(rh)) {
+        alert("Please enter both temperature and humidity.");
+        return;
+      }
+
+      const startDate = new Date(document.getElementById("startDate").value);
+      const today = new Date();
+      const daysSinceStart = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+
+      let stage = "";
+      if (daysSinceStart < 35) stage = "Vegetative";
+      else if (daysSinceStart < 70) stage = "Flowering";
+      else if (daysSinceStart < 77) stage = "Flush";
+      else stage = "Post-Harvest";
+
+      document.getElementById("growthStage").innerHTML = `🌱 <strong>Current Stage:</strong> ${stage} (Day ${daysSinceStart})`;
+
+      const svp = 0.6108 * Math.exp((17.27 * leafTemp) / (leafTemp + 237.3));
+      const avp = (rh / 100) * svp;
+      const vpd = parseFloat((svp - avp).toFixed(2));
+
+      document.getElementById("vpdResult").innerHTML = `📊 <strong>VPD:</strong> ${vpd} kPa (Leaf Temp: ${leafTemp.toFixed(1)}°C)`;
+
+      let vpdMin = 0.8, vpdMax = 1.3;
+      if (stage === "Flowering") [vpdMin, vpdMax] = [1.2, 1.5];
+      else if (stage === "Flush") [vpdMin, vpdMax] = [1.4, 1.8];
+
+      const warning = document.getElementById("vpdWarning");
+      const suggestion = getCorrectionSuggestion(temp, rh, vpd, vpdMin, vpdMax);
+
+      if (vpd < vpdMin || vpd > vpdMax) {
+        warning.style.display = "block";
+        warning.className = "warning";
+        warning.innerHTML = `⚠️ <strong>Warning:</strong> VPD is out of optimal range for the <strong>${stage}</strong> stage.<br>
+          Ideal: ${vpdMin} – ${vpdMax} kPa.<br><br>${suggestion}`;
+      } else {
+        warning.style.display = "block";
+        warning.className = "success";
+        warning.innerHTML = `✅ VPD is within the ideal range for <strong>${stage}</strong>. Keep conditions stable.`;
+      }
+    }
+
+    function getCorrectionSuggestion(temp, rh, vpd, vpdMin, vpdMax) {
+      const leafTemp = temp - 0.5;
+      const svp = 0.6108 * Math.exp((17.27 * leafTemp) / (leafTemp + 237.3));
+
+      let targetVPD = vpd < vpdMin ? vpdMin : vpdMax;
+
+      // Suggest humidity change
+      const targetRH = ((svp - targetVPD) / svp) * 100;
+      const rhChange = Math.round(targetRH - rh);
+
+      // Suggest temp change
+      const altLeafTemp = [leafTemp + 1, leafTemp - 1];
+      const altVPDs = altLeafTemp.map(t => {
+        const svpT = 0.6108 * Math.exp((17.27 * t) / (t + 237.3));
+        const avpT = (rh / 100) * svpT;
+        return parseFloat((svpT - avpT).toFixed(2));
+      });
+
+      let tempChange = "";
+      if (Math.abs(altVPDs[0] - targetVPD) < Math.abs(altVPDs[1] - targetVPD)) {
+        tempChange = "+1°C";
+      } else {
+        tempChange = "-1°C";
+      }
+
+      return `💡 Try increasing or decreasing temp by <strong>${tempChange}</strong> or adjusting RH by <strong>${rhChange > 0 ? "+" : ""}${rhChange}%</strong> to hit your target VPD.`;
+    }
+  </script>
+</body>
+</html>
