@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Grow VPD Calculator</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: white;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    input, button {
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 1em;
+    }
+    button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .alert {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 5px;
+    }
+    .good { background-color: #1e7e34; }
+    .warn { background-color: #842029; color: #f8d7da; }
+    .stage { margin-top: 10px; }
+    .result { font-size: 1.2em; margin-top: 15px; }
+  </style>
+</head>
+<body>
+  <h2>🌿 Grow VPD Calculator</h2>
+
+  <label>Grow Start Date</label><br>
+  <input type="date" id="startDate" value="2025-06-08"/><br>
+
+  <label>Air Temp (°C)</label><br>
+  <input type="number" id="airTemp" step="0.1"/><br>
+
+  <label>Humidity (% RH)</label><br>
+  <input type="number" id="humidity" step="0.1"/><br>
+
+  <button onclick="calculateVPD()">Calculate VPD</button>
+
+  <div class="stage" id="growthStage"></div>
+  <div class="result" id="vpdResult"></div>
+  <div class="alert" id="adviceBox"></div>
+
+  <script>
+    function calculateVPD() {
+      const airTemp = parseFloat(document.getElementById("airTemp").value);
+      const RH = parseFloat(document.getElementById("humidity").value);
+      const startDate = new Date(document.getElementById("startDate").value);
+      const today = new Date();
+
+      const dayDiff = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+      let stage = '';
+      if (dayDiff < 0) {
+        stage = "Not started";
+      } else if (dayDiff < 35) {
+        stage = `Vegetative (Day ${dayDiff})`;
+      } else if (dayDiff < 91) {
+        stage = `Flowering (Day ${dayDiff - 35})`;
+      } else if (dayDiff < 98) {
+        stage = `Flush (Day ${dayDiff - 91})`;
+      } else {
+        stage = `Post-Harvest (Day ${dayDiff})`;
+      }
+      document.getElementById("growthStage").innerText = `🌱 Current Stage: ${stage}`;
+
+      const leafTemp = airTemp - 0.5;
+
+      const SVP = 610.7 * Math.pow(10, (7.5 * leafTemp) / (237.3 + leafTemp));
+      const AVP = (RH / 100) * SVP;
+      const VPD = (SVP - AVP) / 1000;
+
+      const roundedVPD = VPD.toFixed(2);
+      document.getElementById("vpdResult").innerHTML = `📊 <strong>VPD:</strong> ${roundedVPD} kPa <span style="font-size: 0.9em">(Leaf Temp: ${leafTemp.toFixed(1)}°C)</span>`;
+
+      let vpdMin = 0.8, vpdMax = 1.3;
+      if (stage.includes("Flowering")) {
+        vpdMin = 1.2; vpdMax = 1.6;
+      } else if (stage.includes("Flush")) {
+        vpdMin = 1.5; vpdMax = 1.8;
+      }
+
+      const advice = document.getElementById("adviceBox");
+
+      if (VPD >= vpdMin && VPD <= vpdMax) {
+        advice.className = "alert good";
+        advice.innerHTML = `✅ <strong>VPD is within optimal range</strong> for the <strong>${stage.split(' ')[0]}</strong> stage.`;
+      } else {
+        advice.className = "alert warn";
+        const vpdTarget = (vpdMin + vpdMax) / 2;
+        const deltaRH = (VPD > vpdTarget) ? +8 : -8;
+        const deltaTemp = (VPD > vpdTarget) ? -2 : +2;
+
+        advice.innerHTML = `
+          ⚠️ <strong>Warning:</strong> VPD is out of optimal range for the <strong>${stage.split(' ')[0]}</strong> stage.<br>
+          Ideal: <strong>${vpdMin} – ${vpdMax} kPa</strong>.<br><br>
+          💡 Try adjusting:<br>
+          • Temperature by <strong>${deltaTemp > 0 ? '+' : ''}${deltaTemp}°C</strong><br>
+          • Humidity by <strong>${deltaRH > 0 ? '+' : ''}${deltaRH}%</strong><br><br>
+          ${
+            VPD > vpdMax
+              ? "VPD is too high → consider increasing humidity or lowering temperature."
+              : "VPD is too low → consider decreasing humidity or raising temperature."
+          }
+        `;
+      }
+    }
+  </script>
+</body>
+</html>
