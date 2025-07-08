@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Live VPD Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #121212;
+      color: #fff;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+    }
+    .output {
+      margin-top: 20px;
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>🌿 Live Grow Room VPD Monitor</h2>
+  
+  <label>Govee API Key</label>
+  <input id="apiKey" placeholder="Enter your Govee API Key" value="424bffb9-7c09-434e-a273-c8a71062a2f4" />
+
+  <label>Device MAC Address</label>
+  <input id="mac" placeholder="e.g. A4:C1:38:xx:xx:xx" />
+
+  <label>Model Number</label>
+  <input id="model" placeholder="e.g. H5179" value="H5179" />
+
+  <label>Grow Start Date</label>
+  <input id="startDate" type="date" value="2025-06-08" />
+
+  <button onclick="getLiveData()">Fetch Live VPD</button>
+
+  <div class="output" id="result"></div>
+
+  <script>
+    const vpdTargets = {
+      veg: { min: 0.8, max: 1.2 },
+      early_flower: { min: 1.2, max: 1.5 },
+      late_flower: { min: 1.4, max: 1.6 }
+    };
+
+    function getStage(startDate) {
+      const start = new Date(startDate);
+      const today = new Date();
+      const diff = Math.floor((today - start) / (1000 * 60 * 60 * 24));
+      if (diff < 29) return 'veg';
+      if (diff < 43) return 'early_flower';
+      return 'late_flower';
+    }
+
+    function calcVPD(temp, rh, offset = 0.5) {
+      const leafTemp = temp - offset;
+      const es = 0.6108 * Math.exp((17.27 * leafTemp) / (leafTemp + 237.3));
+      const ea = es * (rh / 100);
+      return +(es - ea).toFixed(2);
+    }
+
+    function getRecommendations(vpd, stage, temp, rh) {
+      const { min, max } = vpdTargets[stage];
+      let advice = "✅ VPD is ideal.";
+      let tempChange = 0, rhChange = 0;
+
+      if (vpd < min) {
+        advice = "🔺 VPD too low – raise temp by 1°C or lower RH by 5%.";
+        tempChange = 1; rhChange = -5;
+      } else if (vpd > max) {
+        advice = "🔻 VPD too high – lower temp by 1°C or raise RH by 5%.";
+        tempChange = -1; rhChange = 5;
+      }
+
+      return {
+        vpd,
+        advice,
+        newTemp: temp + tempChange,
+        newRH: Math.max(0, Math.min(100, rh + rhChange))
+      };
+    }
+
+    async function getLiveData() {
+      const apiKey = document.getElementById('apiKey').value.trim();
+      const mac = document.getElementById('mac').value.trim();
+      const model = document.getElementById('model').value.trim();
+      const startDate = document.getElementById('startDate').value;
+
+      const url = `https://cors-anywhere.herokuapp.com/https://developer-api.govee.com/v1/devices/state?device=${mac}&model=${model}`;
+
+      const res = await fetch(url, {
+        headers: { "Govee-API-Key": apiKey }
+      });
+
+      const data = await res.json();
+      const temp = data?.data?.temperature / 100;
+      const rh = data?.data?.humidity;
+
+      const stage = getStage(startDate);
+      const vpd = calcVPD(temp, rh);
+      const rec = getRecommendations(vpd, stage, temp, rh);
+
+      document.getElementById("result").innerHTML = `
+        <p><strong>Stage:</strong> ${stage.replace('_', ' ')}</p>
+        <p><strong>Temp:</strong> ${temp.toFixed(1)}°C</p>
+        <p><strong>RH:</strong> ${rh}%</p>
+        <p><strong>VPD:</strong> ${vpd} kPa</p>
+        <p><strong>Advice:</strong> ${rec.advice}</p>
+        <p><strong>Suggested Temp:</strong> ${rec.newTemp.toFixed(1)}°C</p>
+        <p><strong>Suggested RH:</strong> ${rec.newRH.toFixed(1)}%</p>
+      `;
+    }
+  </script>
+
+</body>
+</html>
