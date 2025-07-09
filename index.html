@@ -3,97 +3,110 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Grow Room VPD Calculator</title>
+  <title>Grow Room VPD Tool</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
-      background-color: #f5f5f5;
-      padding: 20px;
       margin: 0;
+      padding: 0;
+      background: #f2f3f7;
     }
-    .container {
-      max-width: 480px;
-      margin: auto;
-      background: #fff;
+    .app {
+      max-width: 500px;
+      margin: 0 auto;
       padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      background: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.08);
+      min-height: 100vh;
     }
     h1 {
       text-align: center;
-      margin-bottom: 24px;
       font-size: 1.6em;
+      margin-bottom: 20px;
     }
     label {
-      display: block;
-      margin-top: 15px;
       font-weight: 600;
+      display: block;
+      margin: 15px 0 5px;
     }
-    input {
+    input[type="number"], input[type="range"] {
       width: 100%;
-      padding: 10px;
-      margin-top: 6px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
+      padding: 12px;
       font-size: 1em;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-sizing: border-box;
+    }
+    .slider-value {
+      text-align: right;
+      font-size: 0.9em;
+      margin-top: 4px;
+      color: #444;
     }
     button {
-      width: 100%;
       margin-top: 20px;
-      padding: 12px;
-      background-color: #28a745;
+      width: 100%;
+      background: #28a745;
       color: white;
+      font-size: 1.1em;
+      padding: 14px;
       border: none;
-      border-radius: 6px;
-      font-size: 1em;
+      border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
     }
-    button:hover {
-      background-color: #218838;
-    }
     .result {
-      margin-top: 20px;
+      margin-top: 25px;
       padding: 16px;
-      background: #f1f1f1;
+      background: #eef3f8;
       border-radius: 10px;
-      font-size: 1em;
       text-align: center;
       line-height: 1.6;
+      font-size: 1em;
     }
+    .result.ideal { background: #d4edda; color: #155724; }
+    .result.low { background: #fff3cd; color: #856404; }
+    .result.high { background: #f8d7da; color: #721c24; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🌱 VPD Calculator</h1>
+  <div class="app">
+    <h1>🌿 Grow Room VPD</h1>
 
     <label for="temp">Air Temperature (°C)</label>
     <input type="number" id="temp" placeholder="e.g. 25" inputmode="decimal" />
 
-    <label for="rh">Relative Humidity (%)</label>
+    <label for="rh">Humidity (%)</label>
     <input type="number" id="rh" placeholder="e.g. 60" inputmode="decimal" />
 
     <label for="offset">Leaf Temp Offset (°C)</label>
-    <input type="number" id="offset" value="0.5" step="0.1" inputmode="decimal" />
+    <input type="range" id="offset" min="0" max="2.5" step="0.1" value="0.5" />
+    <div class="slider-value">Current Offset: <span id="offsetValue">0.5</span>°C</div>
 
     <button onclick="calculateVPD()">Calculate VPD</button>
 
-    <div id="output" class="result"></div>
+    <div id="output" class="result" style="display:none;"></div>
   </div>
 
   <script>
+    document.getElementById("offset").addEventListener("input", function() {
+      document.getElementById("offsetValue").textContent = this.value;
+    });
+
     function calculateVPD() {
       const temp = parseFloat(document.getElementById("temp").value);
       const rh = parseFloat(document.getElementById("rh").value);
-      const offsetInput = parseFloat(document.getElementById("offset").value);
-      const leafOffset = isNaN(offsetInput) ? 0.5 : offsetInput;
-      const leafTemp = temp - leafOffset;
+      const offset = parseFloat(document.getElementById("offset").value);
+      const output = document.getElementById("output");
 
       if (isNaN(temp) || isNaN(rh)) {
-        document.getElementById("output").innerHTML = "❌ Please enter both temperature and humidity.";
+        output.style.display = "block";
+        output.className = "result";
+        output.innerHTML = "❌ Please enter both temperature and humidity.";
         return;
       }
 
+      const leafTemp = temp - offset;
       const svp = 0.6108 * Math.exp((17.27 * leafTemp) / (leafTemp + 237.3));
       const avp = svp * (rh / 100);
       const vpd = svp - avp;
@@ -103,30 +116,32 @@
       const vegStart = new Date("2025-06-08");
       const daysSince = Math.floor((today - vegStart) / (1000 * 60 * 60 * 24));
 
-      let stage = "Veg";
-      if (daysSince >= 35 && daysSince < 91) stage = "Flower";
-      else if (daysSince >= 91) stage = "Flush";
-
-      let advice = "";
-      if (stage === "Veg") {
-        if (vpd < 0.8) advice = "⚠️ VPD too low. Raise temp or lower RH.";
-        else if (vpd > 1.2) advice = "⚠️ VPD too high. Lower temp or increase RH.";
-        else advice = "✅ VPD is ideal for Veg stage.";
-      } else if (stage === "Flower") {
-        if (vpd < 1.0) advice = "⚠️ VPD too low. Raise temp or lower RH.";
-        else if (vpd > 1.5) advice = "⚠️ VPD too high. Lower temp or increase RH.";
-        else advice = "✅ VPD is ideal for Flower stage.";
-      } else {
-        if (vpd < 1.0) advice = "⚠️ VPD too low. Raise temp or lower RH.";
-        else if (vpd > 1.6) advice = "⚠️ VPD too high. Lower temp or increase RH.";
-        else advice = "✅ VPD is ideal for Flush stage.";
+      let stage = "Veg", min = 0.8, max = 1.2;
+      if (daysSince >= 35 && daysSince < 91) {
+        stage = "Flower"; min = 1.0; max = 1.5;
+      } else if (daysSince >= 91) {
+        stage = "Flush"; min = 1.0; max = 1.6;
       }
 
-      document.getElementById("output").innerHTML = `
-        <strong>🌿 Stage:</strong> ${stage}<br>
-        <strong>📅 Days Since Veg:</strong> ${daysSince}<br>
-        <strong>🌡️ Leaf Temp Offset:</strong> ${leafOffset}°C<br>
-        <strong>💧 VPD:</strong> ${vpdRounded} kPa<br><br>
+      let advice = "", resultClass = "";
+      if (vpd < min) {
+        advice = `⚠️ VPD too low. Raise temp or lower RH.<br>Ideal range for ${stage}: ${min}–${max} kPa`;
+        resultClass = "low";
+      } else if (vpd > max) {
+        advice = `⚠️ VPD too high. Lower temp or raise RH.<br>Ideal range for ${stage}: ${min}–${max} kPa`;
+        resultClass = "high";
+      } else {
+        advice = `✅ VPD is ideal for ${stage} stage.<br>Target range: ${min}–${max} kPa`;
+        resultClass = "ideal";
+      }
+
+      output.style.display = "block";
+      output.className = `result ${resultClass}`;
+      output.innerHTML = `
+        <strong>Stage:</strong> ${stage}<br>
+        <strong>Days Since Veg:</strong> ${daysSince}<br>
+        <strong>Leaf Temp Offset:</strong> ${offset}°C<br>
+        <strong>VPD:</strong> ${vpdRounded} kPa<br><br>
         ${advice}
       `;
     }
