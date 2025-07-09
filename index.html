@@ -29,7 +29,7 @@
       display: block;
       margin: 15px 0 5px;
     }
-    input[type="number"], input[type="range"] {
+    input[type="number"], input[type="range"], select {
       width: 100%;
       padding: 12px;
       font-size: 1em;
@@ -83,6 +83,15 @@
     <input type="range" id="offset" min="0" max="2.5" step="0.1" value="0.5" />
     <div class="slider-value">Current Offset: <span id="offsetValue">0.5</span>°C</div>
 
+    <label for="stage">Stage of Life</label>
+    <select id="stage">
+      <option value="clone">Rooted Clone</option>
+      <option value="veg" selected>Veg</option>
+      <option value="flower">Flower</option>
+      <option value="late">Late Flower</option>
+      <option value="flush">Flush</option>
+    </select>
+
     <button onclick="calculateVPD()">Calculate VPD</button>
 
     <div id="output" class="result" style="display:none;"></div>
@@ -97,6 +106,7 @@
       const temp = parseFloat(document.getElementById("temp").value);
       const rh = parseFloat(document.getElementById("rh").value);
       const offset = parseFloat(document.getElementById("offset").value);
+      const stage = document.getElementById("stage").value;
       const output = document.getElementById("output");
 
       if (isNaN(temp) || isNaN(rh)) {
@@ -112,34 +122,47 @@
       const vpd = svp - avp;
       const vpdRounded = vpd.toFixed(2);
 
-      const today = new Date();
-      const vegStart = new Date("2025-06-08");
-      const daysSince = Math.floor((today - vegStart) / (1000 * 60 * 60 * 24));
+      let stageName = "", min = 0, max = 0;
 
-      let stage = "Veg", min = 0.8, max = 1.2;
-      if (daysSince >= 35 && daysSince < 91) {
-        stage = "Flower"; min = 1.0; max = 1.5;
-      } else if (daysSince >= 91) {
-        stage = "Flush"; min = 1.0; max = 1.6;
+      switch(stage) {
+        case "clone":
+          stageName = "Rooted Clone";
+          min = 0.4; max = 0.8;
+          break;
+        case "veg":
+          stageName = "Veg";
+          min = 0.8; max = 1.2;
+          break;
+        case "flower":
+          stageName = "Flower";
+          min = 1.0; max = 1.5;
+          break;
+        case "late":
+          stageName = "Late Flower";
+          min = 1.2; max = 1.6;
+          break;
+        case "flush":
+          stageName = "Flush";
+          min = 1.4; max = 1.8;
+          break;
       }
 
       let advice = "", resultClass = "";
       if (vpd < min) {
-        advice = `⚠️ VPD too low. Raise temp or lower RH.<br>Ideal range for ${stage}: ${min}–${max} kPa`;
+        advice = `⚠️ VPD too low. Raise temp or lower RH.<br>Ideal for ${stageName}: ${min}–${max} kPa`;
         resultClass = "low";
       } else if (vpd > max) {
-        advice = `⚠️ VPD too high. Lower temp or raise RH.<br>Ideal range for ${stage}: ${min}–${max} kPa`;
+        advice = `⚠️ VPD too high. Lower temp or increase RH.<br>Ideal for ${stageName}: ${min}–${max} kPa`;
         resultClass = "high";
       } else {
-        advice = `✅ VPD is ideal for ${stage} stage.<br>Target range: ${min}–${max} kPa`;
+        advice = `✅ VPD is ideal for ${stageName} stage.<br>Target: ${min}–${max} kPa`;
         resultClass = "ideal";
       }
 
       output.style.display = "block";
       output.className = `result ${resultClass}`;
       output.innerHTML = `
-        <strong>Stage:</strong> ${stage}<br>
-        <strong>Days Since Veg:</strong> ${daysSince}<br>
+        <strong>Stage:</strong> ${stageName}<br>
         <strong>Leaf Temp Offset:</strong> ${offset}°C<br>
         <strong>VPD:</strong> ${vpdRounded} kPa<br><br>
         ${advice}
