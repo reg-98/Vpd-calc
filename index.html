@@ -22,7 +22,7 @@
     h1 {
       text-align: center;
       font-size: 1.6em;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
     }
     label {
       font-weight: 600;
@@ -71,7 +71,16 @@
 </head>
 <body>
   <div class="app">
-    <h1>🌿 Grow Room VPD</h1>
+    <h1>Grow Room VPD</h1>
+
+    <label for="stage">Stage of Life</label>
+    <select id="stage">
+      <option value="clone">Rooted Clone</option>
+      <option value="veg" selected>Veg</option>
+      <option value="flower">Flower</option>
+      <option value="late">Late Flower</option>
+      <option value="flush">Flush</option>
+    </select>
 
     <label for="temp">Air Temperature (°C)</label>
     <input type="number" id="temp" placeholder="e.g. 25" inputmode="decimal" />
@@ -82,15 +91,6 @@
     <label for="offset">Leaf Temp Offset (°C)</label>
     <input type="range" id="offset" min="0" max="2.5" step="0.1" value="0.5" />
     <div class="slider-value">Current Offset: <span id="offsetValue">0.5</span>°C</div>
-
-    <label for="stage">Stage of Life</label>
-    <select id="stage">
-      <option value="clone">Rooted Clone</option>
-      <option value="veg" selected>Veg</option>
-      <option value="flower">Flower</option>
-      <option value="late">Late Flower</option>
-      <option value="flush">Flush</option>
-    </select>
 
     <button onclick="calculateVPD()">Calculate VPD</button>
 
@@ -149,13 +149,13 @@
 
       let advice = "", resultClass = "";
       if (vpd < min) {
-        advice = `⚠️ VPD too low. Raise temp or lower RH.<br>Ideal for ${stageName}: ${min}–${max} kPa`;
+        advice = `VPD too low. Raise temp or lower RH.<br>Ideal for ${stageName}: ${min}–${max} kPa`;
         resultClass = "low";
       } else if (vpd > max) {
-        advice = `⚠️ VPD too high. Lower temp or increase RH.<br>Ideal for ${stageName}: ${min}–${max} kPa`;
+        advice = `VPD too high. Lower temp or increase RH.<br>Ideal for ${stageName}: ${min}–${max} kPa`;
         resultClass = "high";
       } else {
-        advice = `✅ VPD is ideal for ${stageName} stage.<br>Target: ${min}–${max} kPa`;
+        advice = `VPD is ideal for ${stageName} stage.<br>Target: ${min}–${max} kPa`;
         resultClass = "ideal";
       }
 
