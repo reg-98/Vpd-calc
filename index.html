@@ -1,119 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Grow VPD Calculator</title>
-  <style>
-    body {
-      background-color: #121212;
-      color: white;
-      font-family: Arial, sans-serif;
-      padding: 20px;
-    }
-    input, button {
-      padding: 10px;
-      margin: 10px 0;
-      font-size: 1em;
-    }
-    button {
-      background-color: #28a745;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-    .alert {
-      margin-top: 20px;
-      padding: 15px;
-      border-radius: 5px;
-    }
-    .good { background-color: #1e7e34; }
-    .warn { background-color: #842029; color: #f8d7da; }
-    .stage { margin-top: 10px; }
-    .result { font-size: 1.2em; margin-top: 15px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grow App</title>
+<style>
+  body { font-family: sans-serif; margin: 0; padding: 1rem; background: #f0f2f5; }
+  .card { background: #fff; padding: 1rem; margin: 1rem 0; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);}
+  .timeline { display: flex; margin: 1rem 0; }
+  .timeline div { flex: 1; text-align: center; padding: 0.5rem; position: relative; }
+  .timeline div:not(:last-child)::after { content:""; position:absolute; top:50%; right:0; width:2px; height:50%; background:#ccc; transform:translateY(-50%);}
+  .current { background: #dff7d8; font-weight: bold; }
+  .history-table { width:100%; border-collapse: collapse; }
+  .history-table th, .history-table td { border: 1px solid #ddd; padding: 0.5rem; text-align:center;}
+  .low { background: #ffe5e5; }
+  .high { background: #e5f7ff; }
+</style>
 </head>
 <body>
-  <h2>🌿 Grow VPD Calculator</h2>
 
-  <label>Grow Start Date</label><br>
-  <input type="date" id="startDate" value="2025-06-08"/><br>
+<h1>💧 Grow Environment Dashboard</h1>
 
-  <label>Air Temp (°C)</label><br>
-  <input type="number" id="airTemp" step="0.1"/><br>
+<div class="card" id="timelineCard">
+  <h2>🌱 Stage Timeline</h2>
+  <div class="timeline" id="timeline"></div>
+  <p id="timelineInfo"></p>
+</div>
 
-  <label>Humidity (% RH)</label><br>
-  <input type="number" id="humidity" step="0.1"/><br>
+<div class="card">
+  <h2>Measure & Calculate VPD</h2>
+  <label>Temperature (°C): <input type="number" id="temp"></label>
+  <label>Humidity (%): <input type="number" id="rh"></label>
+  <button id="calcBtn">Calculate</button>
+  <div id="vpdResult"></div>
+</div>
 
-  <button onclick="calculateVPD()">Calculate VPD</button>
+<div class="card">
+  <h2>📈 Past 7 Readings</h2>
+  <table class="history-table" id="historyTable">
+    <thead><tr><th>Date</th><th>Temp</th><th>RH</th><th>VPD</th><th>Status</th></tr></thead>
+    <tbody></tbody>
+  </table>
+</div>
 
-  <div class="stage" id="growthStage"></div>
-  <div class="result" id="vpdResult"></div>
-  <div class="alert" id="adviceBox"></div>
+<script>
+const STAGE_LENGTHS = { veg: 32, flower: 56, flush: 7 };
+const IDEAL_VPD = { veg: [0.8, 1.2], flower: [1.0, 1.4], flush: [1.0, 1.3] };
 
-  <script>
-    function calculateVPD() {
-      const airTemp = parseFloat(document.getElementById("airTemp").value);
-      const RH = parseFloat(document.getElementById("humidity").value);
-      const startDate = new Date(document.getElementById("startDate").value);
-      const today = new Date();
+function getCycleStart() {
+  const saved = localStorage.getItem('cycleStart');
+  if (saved) return new Date(saved);
+  const d = new Date(); d.setDate(d.getDate() - 32); // default veg start
+  localStorage.setItem('cycleStart', d.toISOString());
+  return d;
+}
+const cycleStart = getCycleStart();
 
-      const dayDiff = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
-      let stage = '';
-      if (dayDiff < 0) {
-        stage = "Not started";
-      } else if (dayDiff < 35) {
-        stage = `Vegetative (Day ${dayDiff})`;
-      } else if (dayDiff < 91) {
-        stage = `Flowering (Day ${dayDiff - 35})`;
-      } else if (dayDiff < 98) {
-        stage = `Flush (Day ${dayDiff - 91})`;
-      } else {
-        stage = `Post-Harvest (Day ${dayDiff})`;
-      }
-      document.getElementById("growthStage").innerText = `🌱 Current Stage: ${stage}`;
+function computeStage(dayCount) {
+  if (dayCount < STAGE_LENGTHS.veg) return ['veg', STAGE_LENGTHS.veg-dayCount];
+  if (dayCount < STAGE_LENGTHS.veg+STAGE_LENGTHS.flower) return ['flower', STAGE_LENGTHS.veg+STAGE_LENGTHS.flower-dayCount];
+  return ['flush', STAGE_LENGTHS.veg+STAGE_LENGTHS.flower+STAGE_LENGTHS.flush-dayCount];
+}
 
-      const leafTemp = airTemp - 0.5;
+function updateTimeline() {
+  const today = new Date();
+  const dayCount = Math.floor((today - cycleStart)/86400000);
+  const [stage, daysLeft] = computeStage(dayCount);
 
-      const SVP = 610.7 * Math.pow(10, (7.5 * leafTemp) / (237.3 + leafTemp));
-      const AVP = (RH / 100) * SVP;
-      const VPD = (SVP - AVP) / 1000;
+  const stages = ['veg','flower','flush'];
+  const labels = { veg:'Veg', flower:'Flower', flush:'Flush' };
+  const container = document.getElementById('timeline');
+  container.innerHTML = '';
+  stages.forEach(s => {
+    const div = document.createElement('div');
+    div.className = s===stage?'current':'';
+    div.textContent = `${labels[s]} (${STAGE_LENGTHS[s]}d)`;
+    container.appendChild(div);
+  });
+  document.getElementById('timelineInfo').textContent = 
+    `Day ${dayCount} → ${labels[stage]} stage, ${daysLeft} days to next stage.`;
+}
 
-      const roundedVPD = VPD.toFixed(2);
-      document.getElementById("vpdResult").innerHTML = `📊 <strong>VPD:</strong> ${roundedVPD} kPa <span style="font-size: 0.9em">(Leaf Temp: ${leafTemp.toFixed(1)}°C)</span>`;
+function calcVPD(temp, rh) {
+  const svp = 0.6108 * Math.exp((17.27 * temp)/(temp + 237.3));
+  const avp = svp * (rh/100);
+  const vpd = svp - avp;
+  return parseFloat(vpd.toFixed(2));
+}
 
-      let vpdMin = 0.8, vpdMax = 1.3;
-      if (stage.includes("Flowering")) {
-        vpdMin = 1.2; vpdMax = 1.6;
-      } else if (stage.includes("Flush")) {
-        vpdMin = 1.5; vpdMax = 1.8;
-      }
+function getAdvice(stage, vpd) {
+  const [min, max] = IDEAL_VPD[stage];
+  if (vpd < min) return { status:'low', advice:`Raise humidity or lower temp to boost VPD to at least ${min}` };
+  if (vpd > max) return { status:'high', advice:`Lower humidity or raise temp to reduce VPD below ${max}` };
+  return { status:'ideal', advice:'VPD is great for this stage 👍' };
+}
 
-      const advice = document.getElementById("adviceBox");
+function loadHistory() {
+  return JSON.parse(localStorage.getItem('history')||'[]');
+}
 
-      if (VPD >= vpdMin && VPD <= vpdMax) {
-        advice.className = "alert good";
-        advice.innerHTML = `✅ <strong>VPD is within optimal range</strong> for the <strong>${stage.split(' ')[0]}</strong> stage.`;
-      } else {
-        advice.className = "alert warn";
-        const vpdTarget = (vpdMin + vpdMax) / 2;
-        const deltaRH = (VPD > vpdTarget) ? +8 : -8;
-        const deltaTemp = (VPD > vpdTarget) ? -2 : +2;
+function saveHistory(entry) {
+  const h = loadHistory();
+  h.unshift(entry);
+  localStorage.setItem('history', JSON.stringify(h.slice(0,7)));
+}
 
-        advice.innerHTML = `
-          ⚠️ <strong>Warning:</strong> VPD is out of optimal range for the <strong>${stage.split(' ')[0]}</strong> stage.<br>
-          Ideal: <strong>${vpdMin} – ${vpdMax} kPa</strong>.<br><br>
-          💡 Try adjusting:<br>
-          • Temperature by <strong>${deltaTemp > 0 ? '+' : ''}${deltaTemp}°C</strong><br>
-          • Humidity by <strong>${deltaRH > 0 ? '+' : ''}${deltaRH}%</strong><br><br>
-          ${
-            VPD > vpdMax
-              ? "VPD is too high → consider increasing humidity or lowering temperature."
-              : "VPD is too low → consider decreasing humidity or raising temperature."
-          }
-        `;
-      }
-    }
-  </script>
+function renderHistory() {
+  const tbody = document.querySelector('#historyTable tbody');
+  tbody.innerHTML = '';
+  loadHistory().forEach(e => {
+    const row = tbody.insertRow();
+    row.insertCell().textContent = e.date;
+    row.insertCell().textContent = e.temp;
+    row.insertCell().textContent = e.rh;
+    row.insertCell().textContent = e.vpd;
+    const advice = row.insertCell();
+    advice.textContent = e.status;
+    advice.className = e.status;
+  });
+}
+
+document.getElementById('calcBtn').addEventListener('click', () => {
+  const t = parseFloat(document.getElementById('temp').value);
+  const rh = parseFloat(document.getElementById('rh').value);
+  if (isNaN(t)||isNaN(rh)) return alert('Please enter temp & RH');
+  const vpd = calcVPD(t, rh);
+  const dayCount = Math.floor((new Date() - cycleStart)/86400000);
+  const [stage] = computeStage(dayCount);
+  const { status, advice } = getAdvice(stage, vpd);
+  document.getElementById('vpdResult').innerHTML = 
+    `VPD: <strong>${vpd} kPa</strong> → <span class="${status}">${status.toUpperCase()}</span><br>${advice}`;
+
+  const entry = { date:new Date().toLocaleDateString(), temp:t, rh, vpd, status };
+  saveHistory(entry);
+  renderHistory();
+});
+
+updateTimeline();
+renderHistory();
+</script>
+
 </body>
 </html>
