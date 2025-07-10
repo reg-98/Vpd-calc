@@ -3,213 +3,141 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Grow App Toolkit</title>
+  <title>Grow App Toolkit - Setup</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
       margin: 0;
       padding: 0;
-      background: #f2f3f7;
+      background: #f7f8fa;
+      color: #333;
     }
-    .app {
-      max-width: 500px;
-      margin: 0 auto;
+    .container {
+      max-width: 600px;
+      margin: auto;
       padding: 20px;
       background: white;
-      box-shadow: 0 0 10px rgba(0,0,0,0.08);
-      min-height: 100vh;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
     }
-    h1 {
+    h1, h2 {
       text-align: center;
-      font-size: 1.6em;
-      margin-bottom: 10px;
-    }
-    h2 {
-      font-size: 1.2em;
-      margin-top: 30px;
-      margin-bottom: 10px;
-      border-bottom: 1px solid #ccc;
-      padding-bottom: 5px;
+      margin-top: 0;
     }
     label {
-      font-weight: 600;
+      font-weight: bold;
       display: block;
       margin: 15px 0 5px;
     }
-    input, select {
+    select, input[type="number"], input[type="date"] {
       width: 100%;
-      padding: 12px;
+      padding: 10px;
+      margin-bottom: 10px;
       font-size: 1em;
       border: 1px solid #ccc;
-      border-radius: 8px;
-      box-sizing: border-box;
-    }
-    input[type="range"] {
-      margin-top: 8px;
-    }
-    .slider-value {
-      text-align: right;
-      font-size: 0.9em;
-      margin-top: 4px;
-      color: #444;
+      border-radius: 6px;
     }
     button {
-      margin-top: 20px;
       width: 100%;
+      padding: 14px;
       background: #28a745;
       color: white;
-      font-size: 1.1em;
-      padding: 14px;
       border: none;
-      border-radius: 8px;
+      font-size: 1.1em;
       font-weight: bold;
+      border-radius: 6px;
       cursor: pointer;
     }
-    .result {
-      margin-top: 20px;
-      padding: 16px;
-      background: #eef3f8;
-      border-radius: 10px;
-      text-align: center;
-      line-height: 1.6;
-      font-size: 1em;
+    .timeline {
+      margin-top: 30px;
     }
-    .result.ideal { background: #d4edda; color: #155724; }
-    .result.low { background: #fff3cd; color: #856404; }
-    .result.high { background: #f8d7da; color: #721c24; }
+    .week-card {
+      background: #f0f3f7;
+      margin: 10px 0;
+      padding: 15px;
+      border-radius: 8px;
+    }
+    .week-card h3 {
+      margin: 0 0 10px 0;
+    }
   </style>
 </head>
 <body>
-  <div class="app">
+  <div class="container">
     <h1>Grow App Toolkit</h1>
+    <h2>Setup Wizard</h2>
 
-    <!-- 🌡 VPD CALCULATOR -->
-    <h2>VPD Calculator</h2>
-
-    <label for="stage">Stage of Life</label>
-    <select id="stage">
-      <option value="clone">Rooted Clone</option>
-      <option value="veg" selected>Veg</option>
-      <option value="flower">Flower</option>
-      <option value="late">Late Flower</option>
-      <option value="flush">Flush</option>
+    <label for="lightType">Lighting Type</label>
+    <select id="lightType">
+      <option value="LED">LED</option>
+      <option value="HPS">HPS</option>
+      <option value="CMH">CMH</option>
+      <option value="CFL">CFL</option>
     </select>
 
-    <label for="temp">Air Temperature (°C)</label>
-    <input type="number" id="temp" placeholder="e.g. 25" />
+    <label for="medium">Growing Medium</label>
+    <select id="medium">
+      <option value="soil">Soil</option>
+      <option value="coco">Coco</option>
+      <option value="hydro">Hydro</option>
+    </select>
 
-    <label for="rh">Humidity (%)</label>
-    <input type="number" id="rh" placeholder="e.g. 60" />
+    <label for="nutrients">Nutrient Line</label>
+    <select id="nutrients">
+      <option value="dutchpro">Dutch Pro</option>
+      <option value="biobizz">Biobizz</option>
+      <option value="canna">Canna</option>
+      <option value="custom">Custom</option>
+    </select>
 
-    <label for="offset">Leaf Temp Offset (°C)</label>
-    <input type="range" id="offset" min="0" max="2.5" step="0.1" value="0.5" />
-    <div class="slider-value">Current Offset: <span id="offsetValue">0.5</span>°C</div>
+    <label for="watering">Watering Style</label>
+    <select id="watering">
+      <option value="topfeed">Top-Feed</option>
+      <option value="autopot">Auto-Pot</option>
+      <option value="drip">Drip Feed</option>
+      <option value="recirculating">Recirculating Hydro</option>
+    </select>
 
-    <button onclick="calculateVPD()">Calculate VPD</button>
+    <label for="startDate">Veg Start Date</label>
+    <input type="date" id="startDate" />
 
-    <div id="vpdResult" class="result" style="display:none;"></div>
+    <label for="flipDate">Flip to Flower Date</label>
+    <input type="date" id="flipDate" />
 
-    <!-- ☀️ DLI CALCULATOR -->
-    <h2>PPFD → DLI Calculator</h2>
+    <button onclick="generateTimeline()">Generate Grow Timeline</button>
 
-    <label for="ppfd">PPFD (µmol/m²/s)</label>
-    <input type="number" id="ppfd" placeholder="e.g. 800" />
-
-    <label for="hours">Light Hours Per Day</label>
-    <input type="number" id="hours" placeholder="e.g. 18" />
-
-    <button onclick="calculateDLI()">Calculate DLI</button>
-
-    <div id="dliResult" class="result" style="display:none;"></div>
+    <div id="timelineOutput" class="timeline"></div>
   </div>
 
   <script>
-    // Leaf offset slider
-    document.getElementById("offset").addEventListener("input", function() {
-      document.getElementById("offsetValue").textContent = this.value;
-    });
+    function generateTimeline() {
+      const start = new Date(document.getElementById("startDate").value);
+      const flip = new Date(document.getElementById("flipDate").value);
+      const timelineDiv = document.getElementById("timelineOutput");
+      timelineDiv.innerHTML = "";
 
-    // VPD Calculation
-    function calculateVPD() {
-      const temp = parseFloat(document.getElementById("temp").value);
-      const rh = parseFloat(document.getElementById("rh").value);
-      const offset = parseFloat(document.getElementById("offset").value);
-      const stage = document.getElementById("stage").value;
-      const result = document.getElementById("vpdResult");
-
-      if (isNaN(temp) || isNaN(rh)) {
-        result.style.display = "block";
-        result.className = "result";
-        result.innerHTML = "❌ Please enter both temperature and humidity.";
+      if (isNaN(start) || isNaN(flip)) {
+        timelineDiv.innerHTML = "<p>Please select valid dates.</p>";
         return;
       }
 
-      const leafTemp = temp - offset;
-      const svp = 0.6108 * Math.exp((17.27 * leafTemp) / (leafTemp + 237.3));
-      const avp = svp * (rh / 100);
-      const vpd = svp - avp;
-      const vpdRounded = vpd.toFixed(2);
+      const vegWeeks = Math.ceil((flip - start) / (7 * 86400000));
+      const flowerWeeks = 8;
+      let allWeeks = [];
 
-      let stageName = "", min = 0, max = 0;
-      switch(stage) {
-        case "clone": stageName = "Rooted Clone"; min = 0.4; max = 0.8; break;
-        case "veg": stageName = "Veg"; min = 0.8; max = 1.2; break;
-        case "flower": stageName = "Flower"; min = 1.0; max = 1.5; break;
-        case "late": stageName = "Late Flower"; min = 1.2; max = 1.6; break;
-        case "flush": stageName = "Flush"; min = 1.4; max = 1.8; break;
+      for (let i = 1; i <= vegWeeks; i++) {
+        allWeeks.push({ week: `Veg Week ${i}`, task: "Feed light EC, begin training" });
+      }
+      for (let i = 1; i <= flowerWeeks; i++) {
+        let task = i === 1 ? "Lollipop and defoliate" : "Maintain nutrients and watch stretch";
+        allWeeks.push({ week: `Flower Week ${i}`, task: task });
       }
 
-      let feedback = "", resultClass = "";
-      if (vpd < min) {
-        feedback = `VPD too low. Raise temp or lower RH.<br>Ideal for ${stageName}: ${min}–${max} kPa`;
-        resultClass = "low";
-      } else if (vpd > max) {
-        feedback = `VPD too high. Lower temp or increase RH.<br>Ideal for ${stageName}: ${min}–${max} kPa`;
-        resultClass = "high";
-      } else {
-        feedback = `VPD is ideal for ${stageName} stage.<br>Target range: ${min}–${max} kPa`;
-        resultClass = "ideal";
-      }
-
-      result.style.display = "block";
-      result.className = `result ${resultClass}`;
-      result.innerHTML = `
-        <strong>Stage:</strong> ${stageName}<br>
-        <strong>Leaf Temp Offset:</strong> ${offset}°C<br>
-        <strong>VPD:</strong> ${vpdRounded} kPa<br><br>
-        ${feedback}
-      `;
-    }
-
-    // DLI Calculator
-    function calculateDLI() {
-      const ppfd = parseFloat(document.getElementById("ppfd").value);
-      const hours = parseFloat(document.getElementById("hours").value);
-      const result = document.getElementById("dliResult");
-
-      if (isNaN(ppfd) || isNaN(hours)) {
-        result.style.display = "block";
-        result.className = "result";
-        result.innerHTML = "❌ Please enter both PPFD and hours.";
-        return;
-      }
-
-      const dli = (ppfd * 3600 * hours) / 1_000_000;
-      const dliRounded = dli.toFixed(2);
-      let advice = "";
-
-      if (dli < 15) advice = "🟡 DLI is very low — only suitable for clones or early seedlings.";
-      else if (dli < 30) advice = "🟡 Moderate DLI — ideal for veg stage.";
-      else if (dli <= 45) advice = "✅ Good DLI — suitable for strong veg or early flower.";
-      else if (dli <= 60) advice = "✅ Strong DLI — ideal for mid-late flower.";
-      else advice = "⚠️ DLI is very high — monitor temps and leaf stress.";
-
-      result.style.display = "block";
-      result.className = "result";
-      result.innerHTML = `
-        <strong>DLI:</strong> ${dliRounded} mol/m²/day<br><br>
-        ${advice}
-      `;
+      allWeeks.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "week-card";
+        card.innerHTML = `<h3>${item.week}</h3><p>${item.task}</p>`;
+        timelineDiv.appendChild(card);
+      });
     }
   </script>
 </body>
