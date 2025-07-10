@@ -332,5 +332,174 @@
       document.getElementById("note").value = "";
     }
   </script>
+<!-- Defoliation & Training Timeline -->
+<div class="section">
+  <h2>Defoliation & Training Timeline</h2>
+  <button onclick="generateTraining()">Show Training Schedule</button>
+  <div id="trainingOutput" class="output-box"></div>
+</div>
+
+<!-- Cola Support Reminder -->
+<div class="section">
+  <h2>Cola Support Reminder</h2>
+  <button onclick="checkColaSupport()">Check Support Timing</button>
+  <div id="colaOutput" class="output-box"></div>
+</div>
+
+<!-- Light Schedule Warning -->
+<div class="section">
+  <h2>Light Schedule Checker</h2>
+  <label for="hoursOn">Hours Light Is On</label>
+  <input type="number" id="hoursOn" placeholder="e.g. 18" />
+  <label for="recentChanges">Number of Recent Schedule Changes</label>
+  <input type="number" id="recentChanges" placeholder="e.g. 2" />
+  <button onclick="checkLightStress()">Evaluate Light Schedule</button>
+  <div id="lightWarningOutput" class="output-box"></div>
+</div>
+
+<!-- Photo Log -->
+<div class="section">
+  <h2>Photo Log</h2>
+  <label for="photoDate">Date</label>
+  <input type="date" id="photoDate" />
+  <label for="photoDesc">Description</label>
+  <input type="text" id="photoDesc" placeholder="e.g. Post-defoliation, stretch check..." />
+  <label for="photoUpload">Upload Link</label>
+  <input type="url" id="photoUpload" placeholder="Paste link to photo (Google Drive, Imgur, etc)" />
+  <button onclick="savePhoto()">Save Photo Entry</button>
+  <div id="photoOutput" class="output-box"></div>
+</div>
+
+<!-- Custom Nutrient Builder -->
+<div class="section">
+  <h2>Custom Nutrient Builder</h2>
+  <label for="nutrientStage">Growth Stage</label>
+  <select id="nutrientStage">
+    <option value="veg">Veg</option>
+    <option value="flower">Flower</option>
+    <option value="lateflower">Late Flower</option>
+    <option value="flush">Flush</option>
+  </select>
+  <label for="nutrientInput">Enter nutrient plan (e.g. A&B: 1ml/L, CalMag: 0.5ml/L)</label>
+  <textarea id="nutrientInput" rows="3" placeholder="Custom mix per litre..."></textarea>
+  <button onclick="saveNutrients()">Save Nutrient Plan</button>
+  <div id="nutrientOutput" class="output-box"></div>
+</div>
+
+<script>
+// 1. Defoliation & Training
+function generateTraining() {
+  const start = new Date(document.getElementById("startDate").value);
+  const flip = new Date(document.getElementById("flipDate").value);
+  const output = document.getElementById("trainingOutput");
+  output.innerHTML = "";
+
+  if (isNaN(start) || isNaN(flip)) {
+    output.innerHTML = "Please enter both Veg Start and Flip to Flower dates.";
+    return;
+  }
+
+  const vegWeeks = Math.ceil((flip - start) / (7 * 86400000));
+  const schedule = [];
+
+  for (let i = 1; i <= vegWeeks; i++) {
+    let task = "";
+    if (i === 1) task = "Start LST and light node cleanup";
+    else if (i === 2) task = "Top main stems + continue LST";
+    else if (i === 3) task = "Widen canopy and remove lower nodes";
+    else task = "Minor defoliation if required";
+    schedule.push({ week: `Veg Week ${i}`, task });
+  }
+
+  schedule.push({ week: "Flower Week 1", task: "Light lollipopping and expose bud sites" });
+  schedule.push({ week: "Flower Week 2", task: "Final defoliation + cola shaping (Day 14)" });
+  schedule.push({ week: "Flower Week 3+", task: "Avoid defoliation. Begin cola support as needed." });
+
+  schedule.forEach(item => {
+    output.innerHTML += `<p><strong>${item.week}:</strong> ${item.task}</p>`;
+  });
+}
+
+// 2. Cola Support
+function checkColaSupport() {
+  const flip = new Date(document.getElementById("flipDate").value);
+  const now = new Date();
+  const output = document.getElementById("colaOutput");
+  output.innerHTML = "";
+
+  if (isNaN(flip)) {
+    output.innerHTML = "Please set your Flip to Flower date.";
+    return;
+  }
+
+  const daysSinceFlip = Math.floor((now - flip) / 86400000);
+
+  if (daysSinceFlip >= 21) {
+    output.innerHTML = "✅ You should now begin cola support. Bud weight will increase from this point.";
+  } else if (daysSinceFlip >= 14) {
+    output.innerHTML = "⚠️ Prepare to support colas within the next 7 days. Stretch is ending.";
+  } else {
+    output.innerHTML = "ℹ️ Too early. Cola support usually begins after Flower Day 21.";
+  }
+}
+
+// 3. Light Schedule Checker
+function checkLightStress() {
+  const hours = parseFloat(document.getElementById("hoursOn").value);
+  const changes = parseInt(document.getElementById("recentChanges").value);
+  const output = document.getElementById("lightWarningOutput");
+
+  if (isNaN(hours) || isNaN(changes)) {
+    output.innerHTML = "Please enter both values.";
+    return;
+  }
+
+  if (changes >= 3) {
+    output.innerHTML = "⚠️ Too many recent changes. This may stress plants or trigger herm traits.";
+  } else if (hours < 16 && hours > 12) {
+    output.innerHTML = "⚠️ Inconsistent light hours. Stay above 16 for veg, or go 12/12 for flower.";
+  } else {
+    output.innerHTML = "✅ Light schedule looks stable. No issues detected.";
+  }
+}
+
+// 4. Photo Log
+const photoLog = [];
+function savePhoto() {
+  const date = document.getElementById("photoDate").value;
+  const desc = document.getElementById("photoDesc").value.trim();
+  const link = document.getElementById("photoUpload").value.trim();
+  const output = document.getElementById("photoOutput");
+
+  if (!date || !desc || !link) {
+    alert("Please fill all photo log fields.");
+    return;
+  }
+
+  photoLog.push({ date, desc, link });
+  output.innerHTML = photoLog.map(p =>
+    `<p><strong>${p.date}</strong>: ${p.desc}<br><a href="${p.link}" target="_blank">📷 View Photo</a></p>`
+  ).join("");
+}
+
+// 5. Custom Nutrient Plan
+const nutrientPlans = {};
+function saveNutrients() {
+  const stage = document.getElementById("nutrientStage").value;
+  const mix = document.getElementById("nutrientInput").value.trim();
+  const output = document.getElementById("nutrientOutput");
+
+  if (!mix) {
+    alert("Please enter your nutrient mix.");
+    return;
+  }
+
+  nutrientPlans[stage] = mix;
+  output.innerHTML = `
+    <strong>Stage:</strong> ${stage}<br>
+    <strong>Mix:</strong> ${mix}
+  `;
+}
+</script>
 </body>
 </html>
