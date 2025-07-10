@@ -2,504 +2,292 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Grow App Toolkit</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #f7f8fa;
-      color: #333;
-    }
-    .container {
-      max-width: 650px;
-      margin: auto;
-      padding: 20px;
-      background: white;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
-    }
-    h1, h2 {
-      text-align: center;
-    }
-    label {
-      font-weight: bold;
-      display: block;
-      margin: 15px 0 5px;
-    }
-    select, input[type="number"], input[type="date"], textarea {
-      width: 100%;
-      padding: 10px;
-      font-size: 1em;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      margin-bottom: 10px;
-    }
-    button {
-      width: 100%;
-      padding: 14px;
-      background: #28a745;
-      color: white;
-      border: none;
-      font-size: 1.1em;
-      font-weight: bold;
-      border-radius: 6px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-    .section {
-      margin-bottom: 40px;
-    }
-    .output-box {
-      background: #f0f3f7;
-      margin-top: 15px;
-      padding: 10px;
-      border-radius: 6px;
-    }
-    .slider-container {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    input[type=range] {
-      flex: 1;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cannabis Grow Guide</title>
+  <!-- Bootstrap CSS -->
+  <link 
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" 
+    rel="stylesheet" 
+  />
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="container">
-    <h1>Grow App Toolkit</h1>
 
-    <!-- Setup Wizard -->
-    <div class="section">
-      <h2>Setup Wizard</h2>
-      <label for="lightType">Lighting Type</label>
-      <select id="lightType">
-        <option value="LED">LED</option>
-        <option value="HPS">HPS</option>
-        <option value="CMH">CMH</option>
-        <option value="CFL">CFL</option>
-      </select>
-
-      <label for="medium">Growing Medium</label>
-      <select id="medium">
-        <option value="soil">Soil</option>
-        <option value="coco">Coco</option>
-        <option value="hydro">Hydro</option>
-      </select>
-
-      <label for="nutrients">Nutrient Line</label>
-      <select id="nutrients">
-        <option value="dutchpro">Dutch Pro</option>
-        <option value="biobizz">Biobizz</option>
-        <option value="canna">Canna</option>
-        <option value="custom">Custom</option>
-      </select>
-
-      <label for="watering">Watering Style</label>
-      <select id="watering">
-        <option value="topfeed">Top-Feed</option>
-        <option value="autopot">Auto-Pot</option>
-        <option value="drip">Drip Feed</option>
-        <option value="recirculating">Recirculating Hydro</option>
-      </select>
-
-      <label for="startDate">Veg Start Date</label>
-      <input type="date" id="startDate" />
-
-      <label for="flipDate">Flip to Flower Date</label>
-      <input type="date" id="flipDate" />
-
-      <button onclick="generateTimeline()">Generate Grow Timeline</button>
-      <div id="timelineOutput" class="output-box"></div>
+<!-- Navigation Bar (Tabs) -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">GrowGuide</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#growNav" aria-controls="growNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="growNav">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <!-- Tab links: data-bs-toggle="tab" to use Bootstrap tab behavior -->
+        <li class="nav-item">
+          <a class="nav-link active" id="tab-timeline" data-bs-toggle="tab" href="#timelineSection" role="tab">Timeline</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="tab-env" data-bs-toggle="tab" href="#environmentSection" role="tab">Environment/VPD</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="tab-feeding" data-bs-toggle="tab" href="#feedingSection" role="tab">Feeding</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="tab-light" data-bs-toggle="tab" href="#lightSection" role="tab">Lighting</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="tab-training" data-bs-toggle="tab" href="#trainingSection" role="tab">Training</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="tab-drying" data-bs-toggle="tab" href="#dryingSection" role="tab">Drying</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="tab-journal" data-bs-toggle="tab" href="#journalSection" role="tab">Journal</a>
+        </li>
+      </ul>
+      <!-- Optional: button to open setup wizard again from navbar -->
+      <button class="btn btn-outline-light btn-sm ms-lg-3" id="openWizardBtn">Setup Wizard</button>
     </div>
+  </div>
+</nav>
 
-    <!-- Environmental Targets -->
-    <div class="section">
-      <h2>Environmental Targets</h2>
-      <button onclick="generateEnvTargets()">Show Weekly Environment Targets</button>
-      <div id="envOutput" class="output-box"></div>
-    </div>
-
-    <!-- VPD Calculator -->
-    <div class="section">
-      <h2>VPD Calculator</h2>
-      <label for="growthStage">Stage of Life</label>
-      <select id="growthStage">
-        <option value="clone">Clone</option>
-        <option value="veg">Veg</option>
-        <option value="flower">Flower</option>
-        <option value="lateflower">Late Flower</option>
-      </select>
-
-      <label for="airTemp">Air Temperature (°C)</label>
-      <input type="number" id="airTemp" placeholder="e.g. 25" />
-
-      <label for="humidity">Humidity (%)</label>
-      <input type="number" id="humidity" placeholder="e.g. 60" />
-
-      <label>Leaf Temp Offset (°C)</label>
-      <div class="slider-container">
-        <input type="range" min="0" max="5" step="0.1" value="0.5" id="leafOffsetSlider" oninput="updateOffsetLabel()"/>
-        <span id="offsetLabel">Current Offset: 0.5°C</span>
-      </div>
-
-      <button onclick="calculateVPD()">Calculate VPD</button>
-      <div id="vpdOutput" class="output-box"></div>
-    </div>
-
-    <!-- DLI Calculator -->
-    <div class="section">
-      <h2>PPFD → DLI Calculator</h2>
-      <label for="ppfd">PPFD (μmol/m²/s)</label>
-      <input type="number" id="ppfd" placeholder="e.g. 800" />
-      <label for="hours">Light Hours Per Day</label>
-      <input type="number" id="hours" placeholder="e.g. 18" />
-      <button onclick="calculateDLI()">Calculate DLI</button>
-      <div id="dliOutput" class="output-box"></div>
-    </div>
-
-    <!-- EC Planner -->
-    <div class="section">
-      <h2>EC & Feeding Planner</h2>
-      <label for="stage">Growth Stage</label>
-      <select id="stage">
-        <option value="clone">Rooted Clone</option>
-        <option value="veg">Veg</option>
-        <option value="flower">Flower</option>
-        <option value="lateflower">Late Flower</option>
-      </select>
-
-      <label for="tapEC">Tap Water EC</label>
-      <input type="number" id="tapEC" placeholder="e.g. 0.4" step="0.1" />
-
-      <button onclick="generateEC()">Generate EC Plan</button>
-      <div id="ecOutput" class="output-box"></div>
-    </div>
-
-    <!-- Grow Log -->
-    <div class="section">
-      <h2>Grow Log / Daily Notes</h2>
-      <label for="logDate">Date</label>
-      <input type="date" id="logDate" />
-      <label for="note">Note</label>
-      <textarea id="note" rows="4" placeholder="Write observations, actions, feed, etc..."></textarea>
-      <button onclick="saveNote()">Add Note</button>
-      <div id="logOutput" class="output-box"></div>
+<!-- Tab Content Container -->
+<div class="tab-content container-fluid py-3">
+  <!-- Timeline Section -->
+  <div class="tab-pane fade show active" id="timelineSection" role="tabpanel">
+    <h2>Grow Timeline</h2>
+    <p class="text-muted">Week-by-week schedule of tasks and targets for your grow.</p>
+    <div id="timelineContent">
+      <!-- Timeline will be dynamically generated here (e.g., a list or table of weeks and tasks) -->
     </div>
   </div>
 
-  <script>
-    function generateTimeline() {
-      const start = new Date(document.getElementById("startDate").value);
-      const flip = new Date(document.getElementById("flipDate").value);
-      const output = document.getElementById("timelineOutput");
-      output.innerHTML = "";
+  <!-- Environment/VPD Section -->
+  <div class="tab-pane fade" id="environmentSection" role="tabpanel">
+    <h2>Environment &amp; VPD</h2>
+    <p>Recommended temperature &amp; humidity targets for each growth stage, and a VPD calculator for your conditions.</p>
+    <!-- Environment targets (could be a small table or list) -->
+    <div id="envTargets">
+      <table class="table table-sm table-bordered w-100">
+        <thead class="table-light">
+          <tr><th>Stage</th><th>Temp (Lights On)</th><th>Temp (Lights Off)</th><th>Humidity</th><th>VPD Target</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Seedling</td><td>20-25°C</td><td>15-20°C</td><td>65-70% RH</td><td>0.4-0.8 kPa</td></tr>
+          <tr><td>Vegetative</td><td>22-28°C</td><td>18-23°C</td><td>50-70% RH</td><td>0.4-0.8 kPa</td></tr>
+          <tr><td>Flowering</td><td>20-26°C</td><td>16-21°C</td><td>40-50% RH</td><td>0.8-1.2 kPa</td></tr>
+          <tr><td>Late Flower</td><td>18-24°C</td><td>14-18°C</td><td>30-40% RH</td><td>1.2-1.6 kPa</td></tr>
+        </tbody>
+      </table>
+      <small class="text-muted">*Keep good airflow at all stages. Lower humidity as plants mature to avoid mold. [oai_citation:26‡royalqueenseeds.com](https://www.royalqueenseeds.com/us/blog-indoor-cannabis-growing-relative-humidity-and-temperatures-n243#:~:text=3)</small>
+    </div>
+    <!-- VPD Calculator Form -->
+    <div class="mt-4 p-3 bg-light rounded">
+      <h5>VPD Calculator</h5>
+      <div class="row g-2 align-items-end">
+        <div class="col-sm-4">
+          <label for="vpdTemp" class="form-label">Temperature (°C):</label>
+          <input type="number" step="0.1" id="vpdTemp" class="form-control" placeholder="e.g. 25" />
+        </div>
+        <div class="col-sm-4">
+          <label for="vpdRH" class="form-label">Relative Humidity (%):</label>
+          <input type="number" step="1" id="vpdRH" class="form-control" placeholder="e.g. 60" />
+        </div>
+        <div class="col-sm-4">
+          <button class="btn btn-primary w-100" id="calcVpdBtn">Calculate VPD</button>
+        </div>
+      </div>
+      <div class="mt-3" id="vpdResult">
+        <!-- VPD result and advice will appear here -->
+      </div>
+    </div>
+  </div>
 
-      if (isNaN(start) || isNaN(flip)) {
-        output.innerHTML = "<p>Please select valid dates.</p>";
-        return;
-      }
+  <!-- Feeding Section -->
+  <div class="tab-pane fade" id="feedingSection" role="tabpanel">
+    <h2>Feeding Schedule</h2>
+    <p>Recommended EC/PPM feeding chart for your grow (<span id="nutrientLineName">General Nutrients</span>).</p>
+    <!-- Chart container -->
+    <canvas id="ecChart" style="max-width: 100%;"></canvas>
+    <div class="mt-2">
+      <small class="text-muted">Target EC values by week for <span id="mediumName">your medium</span>. Always adjust based on plant feedback. [oai_citation:27‡pevgrow.com](https://pevgrow.com/blog/en/importance-of-electric-conductivity-or-ec-for-growing-marijuana/#:~:text=Week%20Stage%20Soil%20EC%20,6)</small>
+    </div>
+  </div>
 
-      const vegWeeks = Math.ceil((flip - start) / (7 * 86400000));
-      const flowerWeeks = 8;
-      let allWeeks = [];
+  <!-- Lighting Section -->
+  <div class="tab-pane fade" id="lightSection" role="tabpanel">
+    <h2>Lighting Calculator</h2>
+    <p>Convert between PPFD and DLI to ensure your plants get enough light.</p>
+    <div class="row g-3 align-items-end">
+      <div class="col-md-4">
+        <label for="ppfdInput" class="form-label">PPFD (μmol/m²/s):</label>
+        <input type="number" id="ppfdInput" class="form-control" placeholder="e.g. 600" />
+      </div>
+      <div class="col-md-4">
+        <label for="hoursInput" class="form-label">Light Hours per Day:</label>
+        <input type="number" id="hoursInput" class="form-control" placeholder="e.g. 18" />
+      </div>
+      <div class="col-md-4">
+        <button class="btn btn-primary w-100" id="calcDliBtn">Calculate DLI</button>
+      </div>
+    </div>
+    <div class="mt-3" id="dliResult">
+      <!-- DLI result will be shown here -->
+    </div>
+    <div class="mt-4">
+      <h5>Recommended Light Levels</h5>
+      <ul>
+        <li><strong>Seedlings/Early Veg:</strong> ~200–400 PPFD (DLI ~10–20 mol/m²/day)</li>
+        <li><strong>Vegging Plants:</strong> ~400–600 PPFD (DLI ~20–30)</li>
+        <li><strong>Flowering Plants:</strong> ~800–1000 PPFD (DLI ~35–45) [oai_citation:28‡reddit.com](https://www.reddit.com/r/MephHeads/comments/sspwwb/at_seedling_veg_and_flower_for_autos_what_par/#:~:text=will%20calculate%20your%20ppfd%20and,the%20latter%20for%20late%20veg%2Fflower)</li>
+      </ul>
+      <small class="text-muted">Note: Extremely high light (DLI &gt; 45) may require CO₂ supplementation [oai_citation:29‡reddit.com](https://www.reddit.com/r/MephHeads/comments/sspwwb/at_seedling_veg_and_flower_for_autos_what_par/#:~:text=will%20calculate%20your%20ppfd%20and,the%20latter%20for%20late%20veg%2Fflower).</small>
+    </div>
+  </div>
 
-      for (let i = 1; i <= vegWeeks; i++) {
-        allWeeks.push({ week: `Veg Week ${i}`, task: "Feed light EC, begin training" });
-      }
-      for (let i = 1; i <= flowerWeeks; i++) {
-        let task = i === 1 ? "Lollipop and defoliate" : "Maintain nutrients and monitor stretch";
-        allWeeks.push({ week: `Flower Week ${i}`, task: task });
-      }
+  <!-- Training Section -->
+  <div class="tab-pane fade" id="trainingSection" role="tabpanel">
+    <h2>Training Planner</h2>
+    <p>Select training techniques to include. These will be added to your timeline.</p>
+    <div>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="optTopping">
+        <label class="form-check-label" for="optTopping">Topping (main stem cut to create two main colas)</label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="optLST">
+        <label class="form-check-label" for="optLST">LST (low-stress training: bending and tying branches)</label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="optScrog">
+        <label class="form-check-label" for="optScrog">SCROG (ScrOG net for even canopy)</label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="optDefoliation">
+        <label class="form-check-label" for="optDefoliation">Defoliation (removing fan leaves mid-flower)</label>
+      </div>
+      <!-- We might disable topping for autoflowers via JS -->
+      <small id="trainingNote" class="text-warning"></small>
+    </div>
+    <button class="btn btn-secondary mt-3" id="applyTrainingBtn">Apply to Timeline</button>
+    <div class="mt-3">
+      <p class="fst-italic">*You can update these at any time. Be gentle with autos – avoid topping if unsure!</p>
+    </div>
+  </div>
 
-      allWeeks.forEach(item => {
-        const card = document.createElement("div");
-        card.innerHTML = `<strong>${item.week}:</strong> ${item.task}<br>`;
-        output.appendChild(card);
-      });
-    }
+  <!-- Drying Section -->
+  <div class="tab-pane fade" id="dryingSection" role="tabpanel">
+    <h2>Drying Tracker</h2>
+    <p>Monitor your drying process and get reminders for curing.</p>
+    <div id="dryingControls" class="my-3">
+      <button class="btn btn-primary me-2" id="startDryingBtn">Start Drying Now</button>
+      <button class="btn btn-danger" id="resetDryingBtn">Reset</button>
+    </div>
+    <div id="dryingStatus" class="p-3 bg-light rounded">
+      <!-- Status of drying (days, advice) will appear here -->
+      <p><em>No active drying in progress.</em></p>
+    </div>
+    <div class="mt-3">
+      <h5>Drying Tips</h5>
+      <ul>
+        <li>Ideal dry conditions: ~60–70°F and 45–55% RH in a dark, ventilated space [oai_citation:30‡happyhydro.com](https://www.happyhydro.com/blogs/growing-cannabis/humidity-for-drying-cannabis#:~:text=The%20ideal%20temperature%20for%20drying,and%2055).</li>
+        <li>Aim for 7-10 days drying time. Stems should *snap* (not just bend) when ready.</li>
+        <li>After drying, move buds to sealed jars for curing (burp daily in week 1).</li>
+      </ul>
+    </div>
+  </div>
 
-    function generateEnvTargets() {
-      const start = new Date(document.getElementById("startDate").value);
-      const flip = new Date(document.getElementById("flipDate").value);
-      const now = new Date();
-      const output = document.getElementById("envOutput");
-      output.innerHTML = "";
-
-      if (isNaN(start) || isNaN(flip)) {
-        output.innerHTML = "Please enter both veg and flip dates.";
-        return;
-      }
-
-      const oneDay = 86400000;
-      const weekNum = Math.floor((now - start) / (7 * oneDay)) + 1;
-      const flipWeek = Math.floor((flip - start) / (7 * oneDay)) + 1;
-      let stage = "";
-      let targets = {};
-
-      if (weekNum < flipWeek) {
-        stage = "Veg Week " + weekNum;
-        targets = { tempDay: "24–26°C", tempNight: "20–22°C", RH: "60–70%", VPD: "0.8–1.2 kPa" };
-      } else if (weekNum < flipWeek + 2) {
-        stage = "Early Flower Week " + (weekNum - flipWeek + 1);
-        targets = { tempDay: "24–25°C", tempNight: "19–20°C", RH: "50–55%", VPD: "1.2–1.5 kPa" };
-      } else if (weekNum < flipWeek + 6) {
-        stage = "Mid Flower Week " + (weekNum - flipWeek + 1);
-        targets = { tempDay: "24–25°C", tempNight: "18–20°C", RH: "45–50%", VPD: "1.4–1.6 kPa" };
-      } else if (weekNum < flipWeek + 8) {
-        stage = "Late Flower Week " + (weekNum - flipWeek + 1);
-        targets = { tempDay: "22–24°C", tempNight: "18–19°C", RH: "35–45%", VPD: "1.5–1.8 kPa" };
-      } else {
-        stage = "Flush / Finishing";
-        targets = { tempDay: "22–23°C", tempNight: "18–19°C", RH: "30–40%", VPD: "1.6–2.0 kPa" };
-      }
-
-      output.innerHTML = `
-        <strong>Current Stage:</strong> ${stage}<br>
-        <strong>Day Temp:</strong> ${targets.tempDay}<br>
-        <strong>Night Temp:</strong> ${targets.tempNight}<br>
-        <strong>Humidity:</strong> ${targets.RH}<br>
-        <strong>VPD:</strong> ${targets.VPD}
-      `;
-    }
-
-    function calculateVPD() {
-      const tAir = parseFloat(document.getElementById("airTemp").value);
-      const rh = parseFloat(document.getElementById("humidity").value);
-      const offset = parseFloat(document.getElementById("leafOffsetSlider").value || 0.5);
-      const tLeaf = tAir - offset;
-      const vpdOutput = document.getElementById("vpdOutput");
-
-      if (isNaN(tAir) || isNaN(rh)) {
-        vpdOutput.innerHTML = "Please enter valid temperature and humidity.";
-        return;
-      }
-
-      const svp = 0.6108 * Math.exp((17.27 * tLeaf) / (tLeaf + 237.3));
-      const avp = svp * (rh / 100);
-      const vpd = (svp - avp).toFixed(2);
-      vpdOutput.innerHTML = `VPD: <strong>${vpd} kPa</strong>`;
-    }
-
-    function updateOffsetLabel() {
-      const offset = document.getElementById("leafOffsetSlider").value;
-      document.getElementById("offsetLabel").textContent = `Current Offset: ${offset}°C`;
-    }
-
-    function calculateDLI() {
-      const ppfd = parseFloat(document.getElementById("ppfd").value);
-      const hours = parseFloat(document.getElementById("hours").value);
-      const dliOutput = document.getElementById("dliOutput");
-
-      if (isNaN(ppfd) || isNaN(hours)) {
-        dliOutput.innerHTML = "Please enter valid PPFD and hours.";
-        return;
-      }
-
-      const dli = ((ppfd * 3600 * hours) / 1e6).toFixed(2);
-      dliOutput.innerHTML = `DLI: <strong>${dli} mol/m²/day</strong>`;
-    }
-
-    function generateEC() {
-      const stage = document.getElementById("stage").value;
-      const baseEC = parseFloat(document.getElementById("tapEC").value || 0.4);
-      const output = document.getElementById("ecOutput");
-
-      let targetEC = 1.2;
-      if (stage === "clone") targetEC = 0.6;
-      else if (stage === "veg") targetEC = 1.0;
-      else if (stage === "flower") targetEC = 1.4;
-      else if (stage === "lateflower") targetEC = 1.6;
-
-      const nutrientEC = (targetEC - baseEC).toFixed(2);
-      output.innerHTML = `Target Total EC: <strong>${targetEC}</strong><br>Nutrient EC to add: <strong>${nutrientEC}</strong>`;
-    }
-
-    const logEntries = [];
-    function saveNote() {
-      const date = document.getElementById("logDate").value;
-      const note = document.getElementById("note").value.trim();
-      const logOutput = document.getElementById("logOutput");
-
-      if (!date || !note) {
-        alert("Please enter both date and note.");
-        return;
-      }
-
-      logEntries.push({ date, note });
-      logOutput.innerHTML = logEntries.map(entry => `<p><strong>${entry.date}:</strong> ${entry.note}</p>`).join("");
-      document.getElementById("note").value = "";
-    }
-  </script>
-<!-- Defoliation & Training Timeline -->
-<div class="section">
-  <h2>Defoliation & Training Timeline</h2>
-  <button onclick="generateTraining()">Show Training Schedule</button>
-  <div id="trainingOutput" class="output-box"></div>
+  <!-- Journal Section -->
+  <div class="tab-pane fade" id="journalSection" role="tabpanel">
+    <h2>Grow Journal</h2>
+    <p>Add notes and photos to track your grow. Data stays in your browser.</p>
+    <div class="mb-3">
+      <label for="journalText" class="form-label">New Entry:</label>
+      <textarea id="journalText" class="form-control" rows="2" placeholder="Write your notes here..."></textarea>
+      <div class="mt-2 d-flex align-items-center">
+        <input type="file" id="journalPhoto" accept="image/*" class="form-control form-control-sm me-2" style="max-width: 250px;" />
+        <button class="btn btn-success btn-sm" id="addEntryBtn">Add Entry</button>
+      </div>
+    </div>
+    <div id="journalEntries">
+      <!-- Journal entries will be listed here -->
+    </div>
+    <button class="btn btn-outline-secondary btn-sm mt-3" id="exportJournalBtn">Export Journal Data</button>
+  </div>
 </div>
 
-<!-- Cola Support Reminder -->
-<div class="section">
-  <h2>Cola Support Reminder</h2>
-  <button onclick="checkColaSupport()">Check Support Timing</button>
-  <div id="colaOutput" class="output-box"></div>
+<!-- Setup Wizard Modal -->
+<div class="modal" id="setupModal" tabindex="-1" aria-labelledby="setupModalLabel" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="setupModalLabel">Grow Setup Wizard</h5>
+      </div>
+      <div class="modal-body">
+        <!-- Multi-step form within the modal -->
+        <form id="setupForm">
+          <div class="setup-step" id="step1">
+            <p><strong>Step 1:</strong> What type of cannabis are you growing?</p>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="plantType" id="plantTypePhoto" value="photo" checked>
+              <label class="form-check-label" for="plantTypePhoto">Photoperiod (regular/feminized)</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="plantType" id="plantTypeAuto" value="auto">
+              <label class="form-check-label" for="plantTypeAuto">Autoflowering</label>
+            </div>
+          </div>
+          <div class="setup-step d-none" id="step2">
+            <p><strong>Step 2:</strong> Select your lighting type:</p>
+            <select id="lightType" class="form-select">
+              <option value="LED" selected>LED Grow Light</option>
+              <option value="HPS">HPS (High Pressure Sodium)</option>
+              <option value="CFL">CFL / Fluorescent</option>
+              <option value="Sunlight">Sunlight (Outdoor)</option>
+            </select>
+          </div>
+          <div class="setup-step d-none" id="step3">
+            <p><strong>Step 3:</strong> Select your grow medium:</p>
+            <select id="growMedium" class="form-select">
+              <option value="soil" selected>Soil</option>
+              <option value="coco">Coco Coir</option>
+              <option value="hydro">Hydroponic</option>
+            </select>
+          </div>
+          <div class="setup-step d-none" id="step4">
+            <p><strong>Step 4:</strong> Nutrient line (fertilizers) you use:</p>
+            <select id="nutrientLine" class="form-select">
+              <option value="General" selected>General (Balanced N-P-K)</option>
+              <option value="FoxFarm">Fox Farm Trio</option>
+              <option value="GH Flora">Gen. Hydroponics Flora</option>
+              <option value="Canna">Canna Nutrients</option>
+              <option value="Other">Other / Custom</option>
+            </select>
+          </div>
+          <div class="setup-step d-none" id="step5">
+            <p><strong>Step 5:</strong> Watering method:</p>
+            <select id="wateringMethod" class="form-select">
+              <option value="Hand" selected>Hand Watering (manual)</option>
+              <option value="Drip">Drip Irrigation / Auto-Water</option>
+              <option value="DWC">DWC (Deep Water Culture) / Reservoir</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer d-flex justify-content-between">
+        <button type="button" class="btn btn-secondary" id="wizardBackBtn" disabled>Back</button>
+        <button type="button" class="btn btn-primary" id="wizardNextBtn">Next</button>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- Light Schedule Warning -->
-<div class="section">
-  <h2>Light Schedule Checker</h2>
-  <label for="hoursOn">Hours Light Is On</label>
-  <input type="number" id="hoursOn" placeholder="e.g. 18" />
-  <label for="recentChanges">Number of Recent Schedule Changes</label>
-  <input type="number" id="recentChanges" placeholder="e.g. 2" />
-  <button onclick="checkLightStress()">Evaluate Light Schedule</button>
-  <div id="lightWarningOutput" class="output-box"></div>
-</div>
-
-<!-- Photo Log -->
-<div class="section">
-  <h2>Photo Log</h2>
-  <label for="photoDate">Date</label>
-  <input type="date" id="photoDate" />
-  <label for="photoDesc">Description</label>
-  <input type="text" id="photoDesc" placeholder="e.g. Post-defoliation, stretch check..." />
-  <label for="photoUpload">Upload Link</label>
-  <input type="url" id="photoUpload" placeholder="Paste link to photo (Google Drive, Imgur, etc)" />
-  <button onclick="savePhoto()">Save Photo Entry</button>
-  <div id="photoOutput" class="output-box"></div>
-</div>
-
-<!-- Custom Nutrient Builder -->
-<div class="section">
-  <h2>Custom Nutrient Builder</h2>
-  <label for="nutrientStage">Growth Stage</label>
-  <select id="nutrientStage">
-    <option value="veg">Veg</option>
-    <option value="flower">Flower</option>
-    <option value="lateflower">Late Flower</option>
-    <option value="flush">Flush</option>
-  </select>
-  <label for="nutrientInput">Enter nutrient plan (e.g. A&B: 1ml/L, CalMag: 0.5ml/L)</label>
-  <textarea id="nutrientInput" rows="3" placeholder="Custom mix per litre..."></textarea>
-  <button onclick="saveNutrients()">Save Nutrient Plan</button>
-  <div id="nutrientOutput" class="output-box"></div>
-</div>
-
-<script>
-// 1. Defoliation & Training
-function generateTraining() {
-  const start = new Date(document.getElementById("startDate").value);
-  const flip = new Date(document.getElementById("flipDate").value);
-  const output = document.getElementById("trainingOutput");
-  output.innerHTML = "";
-
-  if (isNaN(start) || isNaN(flip)) {
-    output.innerHTML = "Please enter both Veg Start and Flip to Flower dates.";
-    return;
-  }
-
-  const vegWeeks = Math.ceil((flip - start) / (7 * 86400000));
-  const schedule = [];
-
-  for (let i = 1; i <= vegWeeks; i++) {
-    let task = "";
-    if (i === 1) task = "Start LST and light node cleanup";
-    else if (i === 2) task = "Top main stems + continue LST";
-    else if (i === 3) task = "Widen canopy and remove lower nodes";
-    else task = "Minor defoliation if required";
-    schedule.push({ week: `Veg Week ${i}`, task });
-  }
-
-  schedule.push({ week: "Flower Week 1", task: "Light lollipopping and expose bud sites" });
-  schedule.push({ week: "Flower Week 2", task: "Final defoliation + cola shaping (Day 14)" });
-  schedule.push({ week: "Flower Week 3+", task: "Avoid defoliation. Begin cola support as needed." });
-
-  schedule.forEach(item => {
-    output.innerHTML += `<p><strong>${item.week}:</strong> ${item.task}</p>`;
-  });
-}
-
-// 2. Cola Support
-function checkColaSupport() {
-  const flip = new Date(document.getElementById("flipDate").value);
-  const now = new Date();
-  const output = document.getElementById("colaOutput");
-  output.innerHTML = "";
-
-  if (isNaN(flip)) {
-    output.innerHTML = "Please set your Flip to Flower date.";
-    return;
-  }
-
-  const daysSinceFlip = Math.floor((now - flip) / 86400000);
-
-  if (daysSinceFlip >= 21) {
-    output.innerHTML = "✅ You should now begin cola support. Bud weight will increase from this point.";
-  } else if (daysSinceFlip >= 14) {
-    output.innerHTML = "⚠️ Prepare to support colas within the next 7 days. Stretch is ending.";
-  } else {
-    output.innerHTML = "ℹ️ Too early. Cola support usually begins after Flower Day 21.";
-  }
-}
-
-// 3. Light Schedule Checker
-function checkLightStress() {
-  const hours = parseFloat(document.getElementById("hoursOn").value);
-  const changes = parseInt(document.getElementById("recentChanges").value);
-  const output = document.getElementById("lightWarningOutput");
-
-  if (isNaN(hours) || isNaN(changes)) {
-    output.innerHTML = "Please enter both values.";
-    return;
-  }
-
-  if (changes >= 3) {
-    output.innerHTML = "⚠️ Too many recent changes. This may stress plants or trigger herm traits.";
-  } else if (hours < 16 && hours > 12) {
-    output.innerHTML = "⚠️ Inconsistent light hours. Stay above 16 for veg, or go 12/12 for flower.";
-  } else {
-    output.innerHTML = "✅ Light schedule looks stable. No issues detected.";
-  }
-}
-
-// 4. Photo Log
-const photoLog = [];
-function savePhoto() {
-  const date = document.getElementById("photoDate").value;
-  const desc = document.getElementById("photoDesc").value.trim();
-  const link = document.getElementById("photoUpload").value.trim();
-  const output = document.getElementById("photoOutput");
-
-  if (!date || !desc || !link) {
-    alert("Please fill all photo log fields.");
-    return;
-  }
-
-  photoLog.push({ date, desc, link });
-  output.innerHTML = photoLog.map(p =>
-    `<p><strong>${p.date}</strong>: ${p.desc}<br><a href="${p.link}" target="_blank">📷 View Photo</a></p>`
-  ).join("");
-}
-
-// 5. Custom Nutrient Plan
-const nutrientPlans = {};
-function saveNutrients() {
-  const stage = document.getElementById("nutrientStage").value;
-  const mix = document.getElementById("nutrientInput").value.trim();
-  const output = document.getElementById("nutrientOutput");
-
-  if (!mix) {
-    alert("Please enter your nutrient mix.");
-    return;
-  }
-
-  nutrientPlans[stage] = mix;
-  output.innerHTML = `
-    <strong>Stage:</strong> ${stage}<br>
-    <strong>Mix:</strong> ${mix}
-  `;
-}
-</script>
+<!-- Bootstrap JS (for tabs, modals, tooltips) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<!-- Custom JS -->
+<script src="main.js"></script>
 </body>
 </html>
