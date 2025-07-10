@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Grow App Toolkit - Setup</title>
+  <title>Grow App Toolkit</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
@@ -13,7 +13,7 @@
       color: #333;
     }
     .container {
-      max-width: 600px;
+      max-width: 650px;
       margin: auto;
       padding: 20px;
       background: white;
@@ -21,20 +21,19 @@
     }
     h1, h2 {
       text-align: center;
-      margin-top: 0;
     }
     label {
       font-weight: bold;
       display: block;
       margin: 15px 0 5px;
     }
-    select, input[type="number"], input[type="date"] {
+    select, input[type="number"], input[type="date"], textarea {
       width: 100%;
       padding: 10px;
-      margin-bottom: 10px;
       font-size: 1em;
       border: 1px solid #ccc;
       border-radius: 6px;
+      margin-bottom: 10px;
     }
     button {
       width: 100%;
@@ -46,77 +45,152 @@
       font-weight: bold;
       border-radius: 6px;
       cursor: pointer;
+      margin-top: 10px;
     }
-    .timeline {
-      margin-top: 30px;
+    .section {
+      margin-bottom: 40px;
     }
-    .week-card {
+    .output-box {
       background: #f0f3f7;
-      margin: 10px 0;
-      padding: 15px;
-      border-radius: 8px;
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 6px;
     }
-    .week-card h3 {
-      margin: 0 0 10px 0;
+    .slider-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    input[type=range] {
+      flex: 1;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Grow App Toolkit</h1>
-    <h2>Setup Wizard</h2>
 
-    <label for="lightType">Lighting Type</label>
-    <select id="lightType">
-      <option value="LED">LED</option>
-      <option value="HPS">HPS</option>
-      <option value="CMH">CMH</option>
-      <option value="CFL">CFL</option>
-    </select>
+    <!-- Setup Wizard -->
+    <div class="section">
+      <h2>Setup Wizard</h2>
+      <label for="lightType">Lighting Type</label>
+      <select id="lightType">
+        <option value="LED">LED</option>
+        <option value="HPS">HPS</option>
+        <option value="CMH">CMH</option>
+        <option value="CFL">CFL</option>
+      </select>
 
-    <label for="medium">Growing Medium</label>
-    <select id="medium">
-      <option value="soil">Soil</option>
-      <option value="coco">Coco</option>
-      <option value="hydro">Hydro</option>
-    </select>
+      <label for="medium">Growing Medium</label>
+      <select id="medium">
+        <option value="soil">Soil</option>
+        <option value="coco">Coco</option>
+        <option value="hydro">Hydro</option>
+      </select>
 
-    <label for="nutrients">Nutrient Line</label>
-    <select id="nutrients">
-      <option value="dutchpro">Dutch Pro</option>
-      <option value="biobizz">Biobizz</option>
-      <option value="canna">Canna</option>
-      <option value="custom">Custom</option>
-    </select>
+      <label for="nutrients">Nutrient Line</label>
+      <select id="nutrients">
+        <option value="dutchpro">Dutch Pro</option>
+        <option value="biobizz">Biobizz</option>
+        <option value="canna">Canna</option>
+        <option value="custom">Custom</option>
+      </select>
 
-    <label for="watering">Watering Style</label>
-    <select id="watering">
-      <option value="topfeed">Top-Feed</option>
-      <option value="autopot">Auto-Pot</option>
-      <option value="drip">Drip Feed</option>
-      <option value="recirculating">Recirculating Hydro</option>
-    </select>
+      <label for="watering">Watering Style</label>
+      <select id="watering">
+        <option value="topfeed">Top-Feed</option>
+        <option value="autopot">Auto-Pot</option>
+        <option value="drip">Drip Feed</option>
+        <option value="recirculating">Recirculating Hydro</option>
+      </select>
 
-    <label for="startDate">Veg Start Date</label>
-    <input type="date" id="startDate" />
+      <label for="startDate">Veg Start Date</label>
+      <input type="date" id="startDate" />
 
-    <label for="flipDate">Flip to Flower Date</label>
-    <input type="date" id="flipDate" />
+      <label for="flipDate">Flip to Flower Date</label>
+      <input type="date" id="flipDate" />
 
-    <button onclick="generateTimeline()">Generate Grow Timeline</button>
+      <button onclick="generateTimeline()">Generate Grow Timeline</button>
+      <div id="timelineOutput" class="output-box"></div>
+    </div>
 
-    <div id="timelineOutput" class="timeline"></div>
+    <!-- VPD Calculator -->
+    <div class="section">
+      <h2>VPD Calculator</h2>
+      <label for="growthStage">Stage of Life</label>
+      <select id="growthStage">
+        <option value="clone">Clone</option>
+        <option value="veg">Veg</option>
+        <option value="flower">Flower</option>
+        <option value="lateflower">Late Flower</option>
+      </select>
+
+      <label for="airTemp">Air Temperature (°C)</label>
+      <input type="number" id="airTemp" placeholder="e.g. 25" />
+
+      <label for="humidity">Humidity (%)</label>
+      <input type="number" id="humidity" placeholder="e.g. 60" />
+
+      <label>Leaf Temp Offset (°C)</label>
+      <div class="slider-container">
+        <input type="range" min="0" max="5" step="0.1" value="0.5" id="leafOffsetSlider" oninput="updateOffsetLabel()"/>
+        <span id="offsetLabel">Current Offset: 0.5°C</span>
+      </div>
+
+      <button onclick="calculateVPD()">Calculate VPD</button>
+      <div id="vpdOutput" class="output-box"></div>
+    </div>
+
+    <!-- DLI Calculator -->
+    <div class="section">
+      <h2>PPFD → DLI Calculator</h2>
+      <label for="ppfd">PPFD (μmol/m²/s)</label>
+      <input type="number" id="ppfd" placeholder="e.g. 800" />
+      <label for="hours">Light Hours Per Day</label>
+      <input type="number" id="hours" placeholder="e.g. 18" />
+      <button onclick="calculateDLI()">Calculate DLI</button>
+      <div id="dliOutput" class="output-box"></div>
+    </div>
+
+    <!-- EC Planner -->
+    <div class="section">
+      <h2>EC & Feeding Planner</h2>
+      <label for="stage">Growth Stage</label>
+      <select id="stage">
+        <option value="clone">Rooted Clone</option>
+        <option value="veg">Veg</option>
+        <option value="flower">Flower</option>
+        <option value="lateflower">Late Flower</option>
+      </select>
+
+      <label for="tapEC">Tap Water EC</label>
+      <input type="number" id="tapEC" placeholder="e.g. 0.4" step="0.1" />
+
+      <button onclick="generateEC()">Generate EC Plan</button>
+      <div id="ecOutput" class="output-box"></div>
+    </div>
+
+    <!-- Grow Log -->
+    <div class="section">
+      <h2>Grow Log / Daily Notes</h2>
+      <label for="logDate">Date</label>
+      <input type="date" id="logDate" />
+      <label for="note">Note</label>
+      <textarea id="note" rows="4" placeholder="Write observations, actions, feed, etc..."></textarea>
+      <button onclick="saveNote()">Add Note</button>
+      <div id="logOutput" class="output-box"></div>
+    </div>
   </div>
 
   <script>
     function generateTimeline() {
       const start = new Date(document.getElementById("startDate").value);
       const flip = new Date(document.getElementById("flipDate").value);
-      const timelineDiv = document.getElementById("timelineOutput");
-      timelineDiv.innerHTML = "";
+      const output = document.getElementById("timelineOutput");
+      output.innerHTML = "";
 
       if (isNaN(start) || isNaN(flip)) {
-        timelineDiv.innerHTML = "<p>Please select valid dates.</p>";
+        output.innerHTML = "<p>Please select valid dates.</p>";
         return;
       }
 
@@ -128,16 +202,83 @@
         allWeeks.push({ week: `Veg Week ${i}`, task: "Feed light EC, begin training" });
       }
       for (let i = 1; i <= flowerWeeks; i++) {
-        let task = i === 1 ? "Lollipop and defoliate" : "Maintain nutrients and watch stretch";
+        let task = i === 1 ? "Lollipop and defoliate" : "Maintain nutrients and monitor stretch";
         allWeeks.push({ week: `Flower Week ${i}`, task: task });
       }
 
       allWeeks.forEach(item => {
         const card = document.createElement("div");
-        card.className = "week-card";
-        card.innerHTML = `<h3>${item.week}</h3><p>${item.task}</p>`;
-        timelineDiv.appendChild(card);
+        card.innerHTML = `<strong>${item.week}:</strong> ${item.task}<br>`;
+        output.appendChild(card);
       });
+    }
+
+    function calculateVPD() {
+      const tAir = parseFloat(document.getElementById("airTemp").value);
+      const rh = parseFloat(document.getElementById("humidity").value);
+      const offset = parseFloat(document.getElementById("leafOffsetSlider").value || 0.5);
+      const tLeaf = tAir - offset;
+      const vpdOutput = document.getElementById("vpdOutput");
+
+      if (isNaN(tAir) || isNaN(rh)) {
+        vpdOutput.innerHTML = "Please enter valid temperature and humidity.";
+        return;
+      }
+
+      const svp = 0.6108 * Math.exp((17.27 * tLeaf) / (tLeaf + 237.3));
+      const avp = svp * (rh / 100);
+      const vpd = (svp - avp).toFixed(2);
+      vpdOutput.innerHTML = `VPD: <strong>${vpd} kPa</strong>`;
+    }
+
+    function updateOffsetLabel() {
+      const offset = document.getElementById("leafOffsetSlider").value;
+      document.getElementById("offsetLabel").textContent = `Current Offset: ${offset}°C`;
+    }
+
+    function calculateDLI() {
+      const ppfd = parseFloat(document.getElementById("ppfd").value);
+      const hours = parseFloat(document.getElementById("hours").value);
+      const dliOutput = document.getElementById("dliOutput");
+
+      if (isNaN(ppfd) || isNaN(hours)) {
+        dliOutput.innerHTML = "Please enter valid PPFD and hours.";
+        return;
+      }
+
+      const dli = ((ppfd * 3600 * hours) / 1e6).toFixed(2);
+      dliOutput.innerHTML = `DLI: <strong>${dli} mol/m²/day</strong>`;
+    }
+
+    function generateEC() {
+      const stage = document.getElementById("stage").value;
+      const baseEC = parseFloat(document.getElementById("tapEC").value || 0.4);
+      const output = document.getElementById("ecOutput");
+
+      let targetEC = 1.2;
+      if (stage === "clone") targetEC = 0.6;
+      else if (stage === "veg") targetEC = 1.0;
+      else if (stage === "flower") targetEC = 1.4;
+      else if (stage === "lateflower") targetEC = 1.6;
+
+      const nutrientEC = (targetEC - baseEC).toFixed(2);
+      output.innerHTML = `Target Total EC: <strong>${targetEC}</strong><br>Nutrient EC to add: <strong>${nutrientEC}</strong>`;
+    }
+
+    const logEntries = [];
+    function saveNote() {
+      const date = document.getElementById("logDate").value;
+      const note = document.getElementById("note").value.trim();
+      const logOutput = document.getElementById("logOutput");
+
+      if (!date || !note) {
+        alert("Please enter both date and note.");
+        return;
+      }
+
+      logEntries.push({ date, note });
+      logOutput.innerHTML = logEntries.map(entry => `<p><strong>${entry.date}:</strong> ${entry.note}</p>`).join("");
+      document.getElementById("note").value = "";
     }
   </script>
 </body>
