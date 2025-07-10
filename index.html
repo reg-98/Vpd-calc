@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Grow Room VPD Tool</title>
+  <title>Grow App Toolkit</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
@@ -24,18 +24,28 @@
       font-size: 1.6em;
       margin-bottom: 10px;
     }
+    h2 {
+      font-size: 1.2em;
+      margin-top: 30px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 5px;
+    }
     label {
       font-weight: 600;
       display: block;
       margin: 15px 0 5px;
     }
-    input[type="number"], input[type="range"], select {
+    input, select {
       width: 100%;
       padding: 12px;
       font-size: 1em;
       border: 1px solid #ccc;
       border-radius: 8px;
       box-sizing: border-box;
+    }
+    input[type="range"] {
+      margin-top: 8px;
     }
     .slider-value {
       text-align: right;
@@ -56,7 +66,7 @@
       cursor: pointer;
     }
     .result {
-      margin-top: 25px;
+      margin-top: 20px;
       padding: 16px;
       background: #eef3f8;
       border-radius: 10px;
@@ -71,7 +81,10 @@
 </head>
 <body>
   <div class="app">
-    <h1>Grow Room VPD</h1>
+    <h1>Grow App Toolkit</h1>
+
+    <!-- 🌡 VPD CALCULATOR -->
+    <h2>VPD Calculator</h2>
 
     <label for="stage">Stage of Life</label>
     <select id="stage">
@@ -83,10 +96,10 @@
     </select>
 
     <label for="temp">Air Temperature (°C)</label>
-    <input type="number" id="temp" placeholder="e.g. 25" inputmode="decimal" />
+    <input type="number" id="temp" placeholder="e.g. 25" />
 
     <label for="rh">Humidity (%)</label>
-    <input type="number" id="rh" placeholder="e.g. 60" inputmode="decimal" />
+    <input type="number" id="rh" placeholder="e.g. 60" />
 
     <label for="offset">Leaf Temp Offset (°C)</label>
     <input type="range" id="offset" min="0" max="2.5" step="0.1" value="0.5" />
@@ -94,25 +107,40 @@
 
     <button onclick="calculateVPD()">Calculate VPD</button>
 
-    <div id="output" class="result" style="display:none;"></div>
+    <div id="vpdResult" class="result" style="display:none;"></div>
+
+    <!-- ☀️ DLI CALCULATOR -->
+    <h2>PPFD → DLI Calculator</h2>
+
+    <label for="ppfd">PPFD (µmol/m²/s)</label>
+    <input type="number" id="ppfd" placeholder="e.g. 800" />
+
+    <label for="hours">Light Hours Per Day</label>
+    <input type="number" id="hours" placeholder="e.g. 18" />
+
+    <button onclick="calculateDLI()">Calculate DLI</button>
+
+    <div id="dliResult" class="result" style="display:none;"></div>
   </div>
 
   <script>
+    // Leaf offset slider
     document.getElementById("offset").addEventListener("input", function() {
       document.getElementById("offsetValue").textContent = this.value;
     });
 
+    // VPD Calculation
     function calculateVPD() {
       const temp = parseFloat(document.getElementById("temp").value);
       const rh = parseFloat(document.getElementById("rh").value);
       const offset = parseFloat(document.getElementById("offset").value);
       const stage = document.getElementById("stage").value;
-      const output = document.getElementById("output");
+      const result = document.getElementById("vpdResult");
 
       if (isNaN(temp) || isNaN(rh)) {
-        output.style.display = "block";
-        output.className = "result";
-        output.innerHTML = "❌ Please enter both temperature and humidity.";
+        result.style.display = "block";
+        result.className = "result";
+        result.innerHTML = "❌ Please enter both temperature and humidity.";
         return;
       }
 
@@ -123,48 +151,63 @@
       const vpdRounded = vpd.toFixed(2);
 
       let stageName = "", min = 0, max = 0;
-
       switch(stage) {
-        case "clone":
-          stageName = "Rooted Clone";
-          min = 0.4; max = 0.8;
-          break;
-        case "veg":
-          stageName = "Veg";
-          min = 0.8; max = 1.2;
-          break;
-        case "flower":
-          stageName = "Flower";
-          min = 1.0; max = 1.5;
-          break;
-        case "late":
-          stageName = "Late Flower";
-          min = 1.2; max = 1.6;
-          break;
-        case "flush":
-          stageName = "Flush";
-          min = 1.4; max = 1.8;
-          break;
+        case "clone": stageName = "Rooted Clone"; min = 0.4; max = 0.8; break;
+        case "veg": stageName = "Veg"; min = 0.8; max = 1.2; break;
+        case "flower": stageName = "Flower"; min = 1.0; max = 1.5; break;
+        case "late": stageName = "Late Flower"; min = 1.2; max = 1.6; break;
+        case "flush": stageName = "Flush"; min = 1.4; max = 1.8; break;
       }
 
-      let advice = "", resultClass = "";
+      let feedback = "", resultClass = "";
       if (vpd < min) {
-        advice = `VPD too low. Raise temp or lower RH.<br>Ideal for ${stageName}: ${min}–${max} kPa`;
+        feedback = `VPD too low. Raise temp or lower RH.<br>Ideal for ${stageName}: ${min}–${max} kPa`;
         resultClass = "low";
       } else if (vpd > max) {
-        advice = `VPD too high. Lower temp or increase RH.<br>Ideal for ${stageName}: ${min}–${max} kPa`;
+        feedback = `VPD too high. Lower temp or increase RH.<br>Ideal for ${stageName}: ${min}–${max} kPa`;
         resultClass = "high";
       } else {
-        advice = `VPD is ideal for ${stageName} stage.<br>Target: ${min}–${max} kPa`;
+        feedback = `VPD is ideal for ${stageName} stage.<br>Target range: ${min}–${max} kPa`;
         resultClass = "ideal";
       }
 
-      output.style.display = "block";
-      output.className = `result ${resultClass}`;
-      output.innerHTML = `
+      result.style.display = "block";
+      result.className = `result ${resultClass}`;
+      result.innerHTML = `
         <strong>Stage:</strong> ${stageName}<br>
         <strong>Leaf Temp Offset:</strong> ${offset}°C<br>
         <strong>VPD:</strong> ${vpdRounded} kPa<br><br>
+        ${feedback}
+      `;
+    }
+
+    // DLI Calculator
+    function calculateDLI() {
+      const ppfd = parseFloat(document.getElementById("ppfd").value);
+      const hours = parseFloat(document.getElementById("hours").value);
+      const result = document.getElementById("dliResult");
+
+      if (isNaN(ppfd) || isNaN(hours)) {
+        result.style.display = "block";
+        result.className = "result";
+        result.innerHTML = "❌ Please enter both PPFD and hours.";
+        return;
+      }
+
+      const dli = (ppfd * 3600 * hours) / 1_000_000;
+      const dliRounded = dli.toFixed(2);
+      let advice = "";
+
+      if (dli < 15) advice = "🟡 DLI is very low — only suitable for clones or early seedlings.";
+      else if (dli < 30) advice = "🟡 Moderate DLI — ideal for veg stage.";
+      else if (dli <= 45) advice = "✅ Good DLI — suitable for strong veg or early flower.";
+      else if (dli <= 60) advice = "✅ Strong DLI — ideal for mid-late flower.";
+      else advice = "⚠️ DLI is very high — monitor temps and leaf stress.";
+
+      result.style.display = "block";
+      result.className = "result";
+      result.innerHTML = `
+        <strong>DLI:</strong> ${dliRounded} mol/m²/day<br><br>
         ${advice}
       `;
     }
