@@ -114,6 +114,13 @@
       <div id="timelineOutput" class="output-box"></div>
     </div>
 
+    <!-- Environmental Targets -->
+    <div class="section">
+      <h2>Environmental Targets</h2>
+      <button onclick="generateEnvTargets()">Show Weekly Environment Targets</button>
+      <div id="envOutput" class="output-box"></div>
+    </div>
+
     <!-- VPD Calculator -->
     <div class="section">
       <h2>VPD Calculator</h2>
@@ -213,6 +220,50 @@
       });
     }
 
+    function generateEnvTargets() {
+      const start = new Date(document.getElementById("startDate").value);
+      const flip = new Date(document.getElementById("flipDate").value);
+      const now = new Date();
+      const output = document.getElementById("envOutput");
+      output.innerHTML = "";
+
+      if (isNaN(start) || isNaN(flip)) {
+        output.innerHTML = "Please enter both veg and flip dates.";
+        return;
+      }
+
+      const oneDay = 86400000;
+      const weekNum = Math.floor((now - start) / (7 * oneDay)) + 1;
+      const flipWeek = Math.floor((flip - start) / (7 * oneDay)) + 1;
+      let stage = "";
+      let targets = {};
+
+      if (weekNum < flipWeek) {
+        stage = "Veg Week " + weekNum;
+        targets = { tempDay: "24–26°C", tempNight: "20–22°C", RH: "60–70%", VPD: "0.8–1.2 kPa" };
+      } else if (weekNum < flipWeek + 2) {
+        stage = "Early Flower Week " + (weekNum - flipWeek + 1);
+        targets = { tempDay: "24–25°C", tempNight: "19–20°C", RH: "50–55%", VPD: "1.2–1.5 kPa" };
+      } else if (weekNum < flipWeek + 6) {
+        stage = "Mid Flower Week " + (weekNum - flipWeek + 1);
+        targets = { tempDay: "24–25°C", tempNight: "18–20°C", RH: "45–50%", VPD: "1.4–1.6 kPa" };
+      } else if (weekNum < flipWeek + 8) {
+        stage = "Late Flower Week " + (weekNum - flipWeek + 1);
+        targets = { tempDay: "22–24°C", tempNight: "18–19°C", RH: "35–45%", VPD: "1.5–1.8 kPa" };
+      } else {
+        stage = "Flush / Finishing";
+        targets = { tempDay: "22–23°C", tempNight: "18–19°C", RH: "30–40%", VPD: "1.6–2.0 kPa" };
+      }
+
+      output.innerHTML = `
+        <strong>Current Stage:</strong> ${stage}<br>
+        <strong>Day Temp:</strong> ${targets.tempDay}<br>
+        <strong>Night Temp:</strong> ${targets.tempNight}<br>
+        <strong>Humidity:</strong> ${targets.RH}<br>
+        <strong>VPD:</strong> ${targets.VPD}
+      `;
+    }
+
     function calculateVPD() {
       const tAir = parseFloat(document.getElementById("airTemp").value);
       const rh = parseFloat(document.getElementById("humidity").value);
@@ -278,83 +329,8 @@
 
       logEntries.push({ date, note });
       logOutput.innerHTML = logEntries.map(entry => `<p><strong>${entry.date}:</strong> ${entry.note}</p>`).join("");
-      document.getElementById("note").<!-- Environmental Targets -->
-<div class="section">
-  <h2>Environmental Targets</h2>
-  <button onclick="generateEnvTargets()">Show Weekly Environment Targets</button>
-  <div id="envOutput" class="output-box"></div>
-</div>
-
-<script>
-function generateEnvTargets() {
-  const start = new Date(document.getElementById("startDate").value);
-  const flip = new Date(document.getElementById("flipDate").value);
-  const now = new Date();
-  const output = document.getElementById("envOutput");
-  output.innerHTML = "";
-
-  if (isNaN(start) || isNaN(flip)) {
-    output.innerHTML = "Please enter both veg and flip dates.";
-    return;
-  }
-
-  const oneDay = 86400000;
-  const weekNum = Math.floor((now - start) / (7 * oneDay)) + 1;
-  const flipWeek = Math.floor((flip - start) / (7 * oneDay)) + 1;
-  let stage = "";
-  let targets = {};
-
-  if (weekNum < flipWeek) {
-    stage = "Veg Week " + weekNum;
-    targets = {
-      tempDay: "24–26°C",
-      tempNight: "20–22°C",
-      RH: "60–70%",
-      VPD: "0.8–1.2 kPa"
-    };
-  } else if (weekNum < flipWeek + 2) {
-    stage = "Early Flower Week " + (weekNum - flipWeek + 1);
-    targets = {
-      tempDay: "24–25°C",
-      tempNight: "19–20°C",
-      RH: "50–55%",
-      VPD: "1.2–1.5 kPa"
-    };
-  } else if (weekNum < flipWeek + 6) {
-    stage = "Mid Flower Week " + (weekNum - flipWeek + 1);
-    targets = {
-      tempDay: "24–25°C",
-      tempNight: "18–20°C",
-      RH: "45–50%",
-      VPD: "1.4–1.6 kPa"
-    };
-  } else if (weekNum < flipWeek + 8) {
-    stage = "Late Flower Week " + (weekNum - flipWeek + 1);
-    targets = {
-      tempDay: "22–24°C",
-      tempNight: "18–19°C",
-      RH: "35–45%",
-      VPD: "1.5–1.8 kPa"
-    };
-  } else {
-    stage = "Flush / Finishing";
-    targets = {
-      tempDay: "22–23°C",
-      tempNight: "18–19°C",
-      RH: "30–40%",
-      VPD: "1.6–2.0 kPa"
-    };
-  }
-
-  output.innerHTML = `
-    <strong>Current Stage:</strong> ${stage}<br>
-    <strong>Day Temp:</strong> ${targets.tempDay}<br>
-    <strong>Night Temp:</strong> ${targets.tempNight}<br>
-    <strong>Humidity:</strong> ${targets.RH}<br>
-    <strong>VPD:</strong> ${targets.VPD}
-  `;
-}
-</script>
+      document.getElementById("note").value = "";
+    }
   </script>
 </body>
 </html>
