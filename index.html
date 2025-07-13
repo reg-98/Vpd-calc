@@ -2,292 +2,145 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Cannabis Grow Guide</title>
-  <!-- Bootstrap CSS -->
-  <link 
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" 
-    rel="stylesheet" 
-  />
-  <!-- Custom CSS -->
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Grow App Toolkit</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+      margin: 0;
+      padding: 2rem;
+      background: #f7f7f7;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+
+    input {
+      padding: 0.5rem;
+      width: 100%;
+      max-width: 300px;
+      margin-bottom: 1rem;
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+      margin-top: 1rem;
+      font-weight: bold;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .results {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .advice {
+      margin-top: 1rem;
+      font-style: italic;
+    }
+
+    .warning {
+      color: red;
+      font-weight: bold;
+    }
+
+    .good {
+      color: green;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
+  <h1>Grow App Toolkit – VPD Calculator</h1>
 
-<!-- Navigation Bar (Tabs) -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="#">GrowGuide</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#growNav" aria-controls="growNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="growNav">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <!-- Tab links: data-bs-toggle="tab" to use Bootstrap tab behavior -->
-        <li class="nav-item">
-          <a class="nav-link active" id="tab-timeline" data-bs-toggle="tab" href="#timelineSection" role="tab">Timeline</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" id="tab-env" data-bs-toggle="tab" href="#environmentSection" role="tab">Environment/VPD</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" id="tab-feeding" data-bs-toggle="tab" href="#feedingSection" role="tab">Feeding</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" id="tab-light" data-bs-toggle="tab" href="#lightSection" role="tab">Lighting</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" id="tab-training" data-bs-toggle="tab" href="#trainingSection" role="tab">Training</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" id="tab-drying" data-bs-toggle="tab" href="#dryingSection" role="tab">Drying</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" id="tab-journal" data-bs-toggle="tab" href="#journalSection" role="tab">Journal</a>
-        </li>
-      </ul>
-      <!-- Optional: button to open setup wizard again from navbar -->
-      <button class="btn btn-outline-light btn-sm ms-lg-3" id="openWizardBtn">Setup Wizard</button>
-    </div>
-  </div>
-</nav>
+  <label for="temp">Air Temp (°C):</label>
+  <input type="number" id="temp" step="0.1" />
 
-<!-- Tab Content Container -->
-<div class="tab-content container-fluid py-3">
-  <!-- Timeline Section -->
-  <div class="tab-pane fade show active" id="timelineSection" role="tabpanel">
-    <h2>Grow Timeline</h2>
-    <p class="text-muted">Week-by-week schedule of tasks and targets for your grow.</p>
-    <div id="timelineContent">
-      <!-- Timeline will be dynamically generated here (e.g., a list or table of weeks and tasks) -->
-    </div>
+  <label for="rh">Relative Humidity (%):</label>
+  <input type="number" id="rh" step="0.1" />
+
+  <label for="day">Day of Grow:</label>
+  <input type="number" id="day" />
+
+  <button onclick="calculateVPD()">Calculate VPD</button>
+
+  <div class="results" id="results" style="display:none;">
+    <p><strong>Stage:</strong> <span id="stage"></span></p>
+    <p><strong>Leaf Temp Used:</strong> <span id="leafTemp"></span>°C</p>
+    <p><strong>VPD:</strong> <span id="vpd"></span> kPa</p>
+    <p><strong>Target Range:</strong> <span id="targetRange"></span></p>
+    <p class="advice" id="advice"></p>
   </div>
 
-  <!-- Environment/VPD Section -->
-  <div class="tab-pane fade" id="environmentSection" role="tabpanel">
-    <h2>Environment &amp; VPD</h2>
-    <p>Recommended temperature &amp; humidity targets for each growth stage, and a VPD calculator for your conditions.</p>
-    <!-- Environment targets (could be a small table or list) -->
-    <div id="envTargets">
-      <table class="table table-sm table-bordered w-100">
-        <thead class="table-light">
-          <tr><th>Stage</th><th>Temp (Lights On)</th><th>Temp (Lights Off)</th><th>Humidity</th><th>VPD Target</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>Seedling</td><td>20-25°C</td><td>15-20°C</td><td>65-70% RH</td><td>0.4-0.8 kPa</td></tr>
-          <tr><td>Vegetative</td><td>22-28°C</td><td>18-23°C</td><td>50-70% RH</td><td>0.4-0.8 kPa</td></tr>
-          <tr><td>Flowering</td><td>20-26°C</td><td>16-21°C</td><td>40-50% RH</td><td>0.8-1.2 kPa</td></tr>
-          <tr><td>Late Flower</td><td>18-24°C</td><td>14-18°C</td><td>30-40% RH</td><td>1.2-1.6 kPa</td></tr>
-        </tbody>
-      </table>
-      <small class="text-muted">*Keep good airflow at all stages. Lower humidity as plants mature to avoid mold. [oai_citation:26‡royalqueenseeds.com](https://www.royalqueenseeds.com/us/blog-indoor-cannabis-growing-relative-humidity-and-temperatures-n243#:~:text=3)</small>
-    </div>
-    <!-- VPD Calculator Form -->
-    <div class="mt-4 p-3 bg-light rounded">
-      <h5>VPD Calculator</h5>
-      <div class="row g-2 align-items-end">
-        <div class="col-sm-4">
-          <label for="vpdTemp" class="form-label">Temperature (°C):</label>
-          <input type="number" step="0.1" id="vpdTemp" class="form-control" placeholder="e.g. 25" />
-        </div>
-        <div class="col-sm-4">
-          <label for="vpdRH" class="form-label">Relative Humidity (%):</label>
-          <input type="number" step="1" id="vpdRH" class="form-control" placeholder="e.g. 60" />
-        </div>
-        <div class="col-sm-4">
-          <button class="btn btn-primary w-100" id="calcVpdBtn">Calculate VPD</button>
-        </div>
-      </div>
-      <div class="mt-3" id="vpdResult">
-        <!-- VPD result and advice will appear here -->
-      </div>
-    </div>
-  </div>
+  <script>
+    function calculateVPD() {
+      const temp = parseFloat(document.getElementById("temp").value);
+      const rh = parseFloat(document.getElementById("rh").value);
+      const day = parseInt(document.getElementById("day").value);
+      const leafTemp = temp - 0.5;
 
-  <!-- Feeding Section -->
-  <div class="tab-pane fade" id="feedingSection" role="tabpanel">
-    <h2>Feeding Schedule</h2>
-    <p>Recommended EC/PPM feeding chart for your grow (<span id="nutrientLineName">General Nutrients</span>).</p>
-    <!-- Chart container -->
-    <canvas id="ecChart" style="max-width: 100%;"></canvas>
-    <div class="mt-2">
-      <small class="text-muted">Target EC values by week for <span id="mediumName">your medium</span>. Always adjust based on plant feedback. [oai_citation:27‡pevgrow.com](https://pevgrow.com/blog/en/importance-of-electric-conductivity-or-ec-for-growing-marijuana/#:~:text=Week%20Stage%20Soil%20EC%20,6)</small>
-    </div>
-  </div>
+      let stage = "";
+      let targetLow, targetHigh;
 
-  <!-- Lighting Section -->
-  <div class="tab-pane fade" id="lightSection" role="tabpanel">
-    <h2>Lighting Calculator</h2>
-    <p>Convert between PPFD and DLI to ensure your plants get enough light.</p>
-    <div class="row g-3 align-items-end">
-      <div class="col-md-4">
-        <label for="ppfdInput" class="form-label">PPFD (μmol/m²/s):</label>
-        <input type="number" id="ppfdInput" class="form-control" placeholder="e.g. 600" />
-      </div>
-      <div class="col-md-4">
-        <label for="hoursInput" class="form-label">Light Hours per Day:</label>
-        <input type="number" id="hoursInput" class="form-control" placeholder="e.g. 18" />
-      </div>
-      <div class="col-md-4">
-        <button class="btn btn-primary w-100" id="calcDliBtn">Calculate DLI</button>
-      </div>
-    </div>
-    <div class="mt-3" id="dliResult">
-      <!-- DLI result will be shown here -->
-    </div>
-    <div class="mt-4">
-      <h5>Recommended Light Levels</h5>
-      <ul>
-        <li><strong>Seedlings/Early Veg:</strong> ~200–400 PPFD (DLI ~10–20 mol/m²/day)</li>
-        <li><strong>Vegging Plants:</strong> ~400–600 PPFD (DLI ~20–30)</li>
-        <li><strong>Flowering Plants:</strong> ~800–1000 PPFD (DLI ~35–45) [oai_citation:28‡reddit.com](https://www.reddit.com/r/MephHeads/comments/sspwwb/at_seedling_veg_and_flower_for_autos_what_par/#:~:text=will%20calculate%20your%20ppfd%20and,the%20latter%20for%20late%20veg%2Fflower)</li>
-      </ul>
-      <small class="text-muted">Note: Extremely high light (DLI &gt; 45) may require CO₂ supplementation [oai_citation:29‡reddit.com](https://www.reddit.com/r/MephHeads/comments/sspwwb/at_seedling_veg_and_flower_for_autos_what_par/#:~:text=will%20calculate%20your%20ppfd%20and,the%20latter%20for%20late%20veg%2Fflower).</small>
-    </div>
-  </div>
+      if (day <= 35) {
+        stage = "Veg";
+        targetLow = 0.8;
+        targetHigh = 1.3;
+      } else if (day <= 91) {
+        stage = "Flower";
+        targetLow = 1.2;
+        targetHigh = 1.6;
+      } else {
+        stage = "Flush";
+        targetLow = 1.5;
+        targetHigh = 1.8;
+      }
 
-  <!-- Training Section -->
-  <div class="tab-pane fade" id="trainingSection" role="tabpanel">
-    <h2>Training Planner</h2>
-    <p>Select training techniques to include. These will be added to your timeline.</p>
-    <div>
-      <div class="form-check">
-        <input class="form-check-input" type="checkbox" id="optTopping">
-        <label class="form-check-label" for="optTopping">Topping (main stem cut to create two main colas)</label>
-      </div>
-      <div class="form-check">
-        <input class="form-check-input" type="checkbox" id="optLST">
-        <label class="form-check-label" for="optLST">LST (low-stress training: bending and tying branches)</label>
-      </div>
-      <div class="form-check">
-        <input class="form-check-input" type="checkbox" id="optScrog">
-        <label class="form-check-label" for="optScrog">SCROG (ScrOG net for even canopy)</label>
-      </div>
-      <div class="form-check">
-        <input class="form-check-input" type="checkbox" id="optDefoliation">
-        <label class="form-check-label" for="optDefoliation">Defoliation (removing fan leaves mid-flower)</label>
-      </div>
-      <!-- We might disable topping for autoflowers via JS -->
-      <small id="trainingNote" class="text-warning"></small>
-    </div>
-    <button class="btn btn-secondary mt-3" id="applyTrainingBtn">Apply to Timeline</button>
-    <div class="mt-3">
-      <p class="fst-italic">*You can update these at any time. Be gentle with autos – avoid topping if unsure!</p>
-    </div>
-  </div>
+      const svp = 0.6108 * Math.exp((17.27 * leafTemp) / (leafTemp + 237.3));
+      const avp = (rh / 100) * 0.6108 * Math.exp((17.27 * temp) / (temp + 237.3));
+      const vpd = parseFloat((svp - avp).toFixed(2));
 
-  <!-- Drying Section -->
-  <div class="tab-pane fade" id="dryingSection" role="tabpanel">
-    <h2>Drying Tracker</h2>
-    <p>Monitor your drying process and get reminders for curing.</p>
-    <div id="dryingControls" class="my-3">
-      <button class="btn btn-primary me-2" id="startDryingBtn">Start Drying Now</button>
-      <button class="btn btn-danger" id="resetDryingBtn">Reset</button>
-    </div>
-    <div id="dryingStatus" class="p-3 bg-light rounded">
-      <!-- Status of drying (days, advice) will appear here -->
-      <p><em>No active drying in progress.</em></p>
-    </div>
-    <div class="mt-3">
-      <h5>Drying Tips</h5>
-      <ul>
-        <li>Ideal dry conditions: ~60–70°F and 45–55% RH in a dark, ventilated space [oai_citation:30‡happyhydro.com](https://www.happyhydro.com/blogs/growing-cannabis/humidity-for-drying-cannabis#:~:text=The%20ideal%20temperature%20for%20drying,and%2055).</li>
-        <li>Aim for 7-10 days drying time. Stems should *snap* (not just bend) when ready.</li>
-        <li>After drying, move buds to sealed jars for curing (burp daily in week 1).</li>
-      </ul>
-    </div>
-  </div>
+      let advice = "";
+      let status = "";
 
-  <!-- Journal Section -->
-  <div class="tab-pane fade" id="journalSection" role="tabpanel">
-    <h2>Grow Journal</h2>
-    <p>Add notes and photos to track your grow. Data stays in your browser.</p>
-    <div class="mb-3">
-      <label for="journalText" class="form-label">New Entry:</label>
-      <textarea id="journalText" class="form-control" rows="2" placeholder="Write your notes here..."></textarea>
-      <div class="mt-2 d-flex align-items-center">
-        <input type="file" id="journalPhoto" accept="image/*" class="form-control form-control-sm me-2" style="max-width: 250px;" />
-        <button class="btn btn-success btn-sm" id="addEntryBtn">Add Entry</button>
-      </div>
-    </div>
-    <div id="journalEntries">
-      <!-- Journal entries will be listed here -->
-    </div>
-    <button class="btn btn-outline-secondary btn-sm mt-3" id="exportJournalBtn">Export Journal Data</button>
-  </div>
-</div>
+      if (vpd < targetLow) {
+        status = "Too Low";
+        advice = `VPD is too low. Try decreasing RH or increasing temperature slightly.`;
+      } else if (vpd > targetHigh) {
+        status = "Too High";
+        if (temp >= 28) {
+          advice = `VPD is too high. Consider increasing RH since lowering temp may be difficult.`;
+        } else {
+          advice = `VPD is too high. Lower temperature or increase humidity if possible.`;
+        }
+      } else {
+        status = "Optimal";
+        advice = `VPD is in the ideal range for ${stage.toLowerCase()} stage.`;
+      }
 
-<!-- Setup Wizard Modal -->
-<div class="modal" id="setupModal" tabindex="-1" aria-labelledby="setupModalLabel" aria-hidden="true" data-bs-backdrop="static">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="setupModalLabel">Grow Setup Wizard</h5>
-      </div>
-      <div class="modal-body">
-        <!-- Multi-step form within the modal -->
-        <form id="setupForm">
-          <div class="setup-step" id="step1">
-            <p><strong>Step 1:</strong> What type of cannabis are you growing?</p>
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="plantType" id="plantTypePhoto" value="photo" checked>
-              <label class="form-check-label" for="plantTypePhoto">Photoperiod (regular/feminized)</label>
-            </div>
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="plantType" id="plantTypeAuto" value="auto">
-              <label class="form-check-label" for="plantTypeAuto">Autoflowering</label>
-            </div>
-          </div>
-          <div class="setup-step d-none" id="step2">
-            <p><strong>Step 2:</strong> Select your lighting type:</p>
-            <select id="lightType" class="form-select">
-              <option value="LED" selected>LED Grow Light</option>
-              <option value="HPS">HPS (High Pressure Sodium)</option>
-              <option value="CFL">CFL / Fluorescent</option>
-              <option value="Sunlight">Sunlight (Outdoor)</option>
-            </select>
-          </div>
-          <div class="setup-step d-none" id="step3">
-            <p><strong>Step 3:</strong> Select your grow medium:</p>
-            <select id="growMedium" class="form-select">
-              <option value="soil" selected>Soil</option>
-              <option value="coco">Coco Coir</option>
-              <option value="hydro">Hydroponic</option>
-            </select>
-          </div>
-          <div class="setup-step d-none" id="step4">
-            <p><strong>Step 4:</strong> Nutrient line (fertilizers) you use:</p>
-            <select id="nutrientLine" class="form-select">
-              <option value="General" selected>General (Balanced N-P-K)</option>
-              <option value="FoxFarm">Fox Farm Trio</option>
-              <option value="GH Flora">Gen. Hydroponics Flora</option>
-              <option value="Canna">Canna Nutrients</option>
-              <option value="Other">Other / Custom</option>
-            </select>
-          </div>
-          <div class="setup-step d-none" id="step5">
-            <p><strong>Step 5:</strong> Watering method:</p>
-            <select id="wateringMethod" class="form-select">
-              <option value="Hand" selected>Hand Watering (manual)</option>
-              <option value="Drip">Drip Irrigation / Auto-Water</option>
-              <option value="DWC">DWC (Deep Water Culture) / Reservoir</option>
-            </select>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer d-flex justify-content-between">
-        <button type="button" class="btn btn-secondary" id="wizardBackBtn" disabled>Back</button>
-        <button type="button" class="btn btn-primary" id="wizardNextBtn">Next</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Bootstrap JS (for tabs, modals, tooltips) -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- Chart.js Library -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-<!-- Custom JS -->
-<script src="main.js"></script>
+      document.getElementById("results").style.display = "block";
+      document.getElementById("stage").textContent = stage;
+      document.getElementById("leafTemp").textContent = leafTemp.toFixed(1);
+      document.getElementById("vpd").textContent = vpd + " (" + status + ")";
+      document.getElementById("targetRange").textContent = `${targetLow} – ${targetHigh} kPa`;
+      document.getElementById("advice").textContent = advice;
+      document.getElementById("advice").className = vpd >= targetLow && vpd <= targetHigh ? "advice good" : "advice warning";
+    }
+  </script>
 </body>
 </html>
