@@ -66,7 +66,7 @@
   </style>
 </head>
 <body>
-  <h1>Grow App Toolkit – VPD Calculator</h1>
+  <h1>Grow App Toolkit – VPD + PPFD Guide</h1>
 
   <label for="temp">Air Temp (°C):</label>
   <input type="number" id="temp" step="0.1" />
@@ -74,16 +74,15 @@
   <label for="rh">Relative Humidity (%):</label>
   <input type="number" id="rh" step="0.1" />
 
-  <label for="day">Day of Grow:</label>
-  <input type="number" id="day" />
-
   <button onclick="calculateVPD()">Calculate VPD</button>
 
   <div class="results" id="results" style="display:none;">
+    <p><strong>Grow Day:</strong> <span id="growDay"></span></p>
     <p><strong>Stage:</strong> <span id="stage"></span></p>
     <p><strong>Leaf Temp Used:</strong> <span id="leafTemp"></span>°C</p>
     <p><strong>VPD:</strong> <span id="vpd"></span> kPa</p>
-    <p><strong>Target Range:</strong> <span id="targetRange"></span></p>
+    <p><strong>VPD Target:</strong> <span id="targetRange"></span></p>
+    <p><strong>PPFD Target:</strong> <span id="ppfdTarget"></span> µmol/m²/s</p>
     <p class="advice" id="advice"></p>
   </div>
 
@@ -91,53 +90,84 @@
     function calculateVPD() {
       const temp = parseFloat(document.getElementById("temp").value);
       const rh = parseFloat(document.getElementById("rh").value);
-      const day = parseInt(document.getElementById("day").value);
-      const leafTemp = temp - 0.5;
+      const leafTemp = temp - 2.0;
 
-      let stage = "";
-      let targetLow, targetHigh;
+      const flipDate = new Date("2025-07-12");
+      const today = new Date();
+      const timeDiff = today - flipDate;
+      const growDay = Math.floor(timeDiff / (1000 * 60 * 60 * 24)) + 1;
 
-      if (day <= 35) {
-        stage = "Veg";
-        targetLow = 0.8;
-        targetHigh = 1.3;
-      } else if (day <= 91) {
-        stage = "Flower";
-        targetLow = 1.2;
-        targetHigh = 1.6;
+      let stage = "", targetLow, targetHigh, ppfd;
+
+      if (growDay <= 7) {
+        stage = "Flower Week 1 (Stretch Start)";
+        targetLow = 1.3; targetHigh = 1.5;
+        ppfd = "750–850";
+      } else if (growDay <= 14) {
+        stage = "Flower Week 2 (Peak Stretch)";
+        targetLow = 1.4; targetHigh = 1.6;
+        ppfd = "850–950";
+      } else if (growDay <= 21) {
+        stage = "Flower Week 3 (Bud Initiation)";
+        targetLow = 1.4; targetHigh = 1.6;
+        ppfd = "900–1000";
+      } else if (growDay <= 28) {
+        stage = "Flower Week 4 (Bulk Begins)";
+        targetLow = 1.5; targetHigh = 1.7;
+        ppfd = "950–1050";
+      } else if (growDay <= 35) {
+        stage = "Flower Week 5 (Peak Bulk)";
+        targetLow = 1.5; targetHigh = 1.7;
+        ppfd = "950–1050";
+      } else if (growDay <= 42) {
+        stage = "Flower Week 6 (Late Bloom)";
+        targetLow = 0.8; targetHigh = 1.0;
+        ppfd = "950–1000";
+      } else if (growDay <= 49) {
+        stage = "Flower Week 7 (Ripening)";
+        targetLow = 0.8; targetHigh = 1.0;
+        ppfd = "900–1000";
+      } else if (growDay <= 56) {
+        stage = "Flower Week 8 (Final Swell)";
+        targetLow = 0.8; targetHigh = 1.0;
+        ppfd = "850–950";
+      } else if (growDay <= 63) {
+        stage = "Flush Week";
+        targetLow = 0.8; targetHigh = 1.0;
+        ppfd = "700–800 (dimmed)";
       } else {
-        stage = "Flush";
-        targetLow = 1.5;
-        targetHigh = 1.8;
+        stage = "Post-Harvest / Reset";
+        targetLow = 0.0; targetHigh = 0.0;
+        ppfd = "Off";
       }
 
       const svp = 0.6108 * Math.exp((17.27 * leafTemp) / (leafTemp + 237.3));
       const avp = (rh / 100) * 0.6108 * Math.exp((17.27 * temp) / (temp + 237.3));
       const vpd = parseFloat((svp - avp).toFixed(2));
 
-      let advice = "";
-      let status = "";
-
+      let advice = "", status = "";
       if (vpd < targetLow) {
         status = "Too Low";
-        advice = `VPD is too low. Try decreasing RH or increasing temperature slightly.`;
+        advice = `VPD is too low. Try decreasing RH or increasing temperature.`;
       } else if (vpd > targetHigh) {
         status = "Too High";
         if (temp >= 28) {
-          advice = `VPD is too high. Consider increasing RH since lowering temp may be difficult.`;
+          advice = `VPD is too high. Increase RH since lowering temp may be hard.`;
         } else {
-          advice = `VPD is too high. Lower temperature or increase humidity if possible.`;
+          advice = `VPD is too high. Try lowering temp or increasing RH.`;
         }
       } else {
         status = "Optimal";
-        advice = `VPD is in the ideal range for ${stage.toLowerCase()} stage.`;
+        advice = `VPD is in the ideal range for ${stage.toLowerCase()}.`;
       }
 
       document.getElementById("results").style.display = "block";
+      document.getElementById("growDay").textContent = growDay;
       document.getElementById("stage").textContent = stage;
       document.getElementById("leafTemp").textContent = leafTemp.toFixed(1);
-      document.getElementById("vpd").textContent = vpd + " (" + status + ")";
+      document.getElementById("vpd").textContent = `${vpd} (${status})`;
       document.getElementById("targetRange").textContent = `${targetLow} – ${targetHigh} kPa`;
+      document.getElementById("ppfdTarget").textContent = ppfd;
       document.getElementById("advice").textContent = advice;
       document.getElementById("advice").className = vpd >= targetLow && vpd <= targetHigh ? "advice good" : "advice warning";
     }
