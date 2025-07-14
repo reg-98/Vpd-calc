@@ -3,27 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Grow App Toolkit – RH Simplified</title>
+  <title>Grow Timeline App</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
       background: #111;
       color: #eee;
+      margin: 0;
+      padding: 20px;
     }
     h1, h2 {
       color: #90ee90;
-    }
-    label {
-      display: block;
-      margin-top: 12px;
-    }
-    input, select, button {
-      padding: 8px;
-      margin-top: 4px;
-      border: none;
-      border-radius: 4px;
     }
     .section {
       background: #222;
@@ -31,141 +21,99 @@
       margin-bottom: 20px;
       border-radius: 10px;
     }
-    .warning {
-      color: #ffa500;
-      font-weight: bold;
+    input, button {
+      padding: 8px;
+      margin-top: 6px;
+      border: none;
+      border-radius: 5px;
     }
-    .critical {
-      color: #ff4d4d;
-      font-weight: bold;
-    }
+    .warning { color: #ffa500; font-weight: bold; }
+    .critical { color: #ff4d4d; font-weight: bold; }
   </style>
 </head>
 <body>
 
-  <h1>Grow App Toolkit</h1>
-  <div class="section">
-    <label for="vegStart">Veg Start Date:</label>
-    <input type="date" id="vegStart" />
+  <h1>Grow Tracker</h1>
 
-    <label for="currentDate">Today’s Date:</label>
-    <input type="date" id="currentDate" />
-
-    <label for="temp">Current Air Temp (°C):</label>
-    <input type="number" id="temp" step="0.1" />
-
-    <label for="rh">Current RH (%):</label>
-    <input type="number" id="rh" step="0.1" />
-
-    <button onclick="runApp()">Get Advice</button>
+  <div class="section" id="setup">
+    <label>Enter Veg Start Date:</label><br>
+    <input type="date" id="vegStartInput" />
+    <button onclick="saveStartDate()">Save Date</button>
   </div>
 
-  <div id="output" class="section"></div>
+  <div class="section" id="growInfo" style="display:none;"></div>
 
   <script>
-    function runApp() {
-      const vegStart = new Date(document.getElementById("vegStart").value);
-      const currentDate = new Date(document.getElementById("currentDate").value);
-      const temp = parseFloat(document.getElementById("temp").value);
-      const rh = parseFloat(document.getElementById("rh").value);
-      const days = Math.floor((currentDate - vegStart) / (1000 * 60 * 60 * 24));
+    function saveStartDate() {
+      const date = document.getElementById("vegStartInput").value;
+      if (date) {
+        localStorage.setItem("vegStart", date);
+        showGrowInfo();
+      }
+    }
 
-      const output = document.getElementById("output");
-      let phase = "";
-      let ppfd = 0;
-      let feed = "";
-      let rhStatus = "";
-      let vpdAdvice = "";
+    function showGrowInfo() {
+      const vegStart = localStorage.getItem("vegStart");
+      if (!vegStart) return;
 
-      const leafTemp = temp - 2;
+      document.getElementById("setup").style.display = "none";
+      document.getElementById("growInfo").style.display = "block";
+
+      const start = new Date(vegStart);
+      const today = new Date();
+      const days = Math.floor((today - start) / (1000 * 60 * 60 * 24));
+
+      let phase = "", ppfd = 0, feed = "", rh = "", reminder = "";
 
       if (days < 7) {
-        phase = "Veg Week 1";
-        ppfd = 300;
-        feed = "Root Stim 1ml, Cal-Mag 0.5ml";
+        phase = "Veg Week 1"; ppfd = 300; feed = "Root Stim 1ml, Cal-Mag 0.5ml"; rh = ">50%";
       } else if (days < 14) {
-        phase = "Veg Week 2";
-        ppfd = 400;
-        feed = "Root Stim 1ml, Grow 1ml, Cal-Mag 1ml";
+        phase = "Veg Week 2"; ppfd = 400; feed = "Root Stim 1ml, Grow 1ml, Cal-Mag 1ml"; rh = ">50%";
       } else if (days < 21) {
-        phase = "Veg Week 3";
-        ppfd = 600;
-        feed = "MEGAPOT ON – Root Stim 1ml, Grow 1.5ml, Cal-Mag 1ml";
+        phase = "Veg Week 3"; ppfd = 600; feed = "MEGAPOT ON – Root Stim 1ml, Grow 1.5ml, Cal-Mag 1ml"; rh = ">50%";
       } else if (days < 28) {
-        phase = "Veg Week 4";
-        ppfd = 800;
-        feed = "Root Stim 1ml, Grow 2ml, Cal-Mag 1ml";
+        phase = "Veg Week 4"; ppfd = 800; feed = "Root Stim 1ml, Grow 2ml, Cal-Mag 1ml"; rh = ">50%";
       } else if (days < 35) {
-        phase = "Veg Week 5 / Pre-Flower";
-        ppfd = 800;
-        feed = "Defoliate. Grow 2ml, Cal-Mag 1ml";
+        phase = "Veg Week 5 / Pre-Flower"; ppfd = 800; feed = "Defoliate. Grow 2ml, Cal-Mag 1ml"; rh = ">50%";
       } else if (days < 42) {
-        phase = "Flower Week 1";
-        ppfd = 800;
-        feed = "Bloom 2ml, Cal-Mag 1ml";
+        phase = "Flower Week 1"; ppfd = 800; feed = "Bloom 2ml, Cal-Mag 1ml"; rh = "≤50%";
       } else if (days < 49) {
-        phase = "Flower Week 2";
-        ppfd = 1100;
-        feed = "Bloom 2.5ml, Cal-Mag 1ml, PK Bulk 0.25ml";
+        phase = "Flower Week 2"; ppfd = 1100; feed = "Bloom 2.5ml, Cal-Mag 1ml, PK Bulk 0.25ml"; rh = "≤50%";
       } else if (days < 56) {
-        phase = "Flower Week 3";
-        ppfd = 1100;
-        feed = "Cane + Lollipop. Bloom 2.5ml, Cal-Mag 1ml, PK Bulk 0.5ml";
+        phase = "Flower Week 3"; ppfd = 1100; feed = "Cane + Lollipop. Bloom 2.5ml, Cal-Mag 1ml, PK Bulk 0.5ml"; rh = "≤50%";
+        if (days === 56) reminder = "<p class='critical'>🌿 Today is Flower Day 21 – Full Lollipop & Defoliation</p>";
       } else if (days < 63) {
-        phase = "Flower Week 4";
-        ppfd = 1100;
-        feed = "Bloom 2.5ml, Cal-Mag 1ml, PK Bulk 0.5ml";
+        phase = "Flower Week 4"; ppfd = 1100; feed = "Bloom 2.5ml, Cal-Mag 1ml, PK Bulk 0.5ml"; rh = "≤50%";
       } else if (days < 70) {
-        phase = "Flower Week 5";
-        ppfd = 1100;
-        feed = "Bloom 2.5ml, Cal-Mag 1ml, PK Bulk 0.5ml";
+        phase = "Flower Week 5"; ppfd = 1100; feed = "Bloom 2.5ml, Cal-Mag 1ml, PK Bulk 0.5ml"; rh = "≤50%";
       } else if (days < 77) {
-        phase = "Flower Week 6";
-        ppfd = 1100;
-        feed = "Bloom 2.5ml, Cal-Mag 1ml, PK Bulk 0.5ml";
+        phase = "Flower Week 6"; ppfd = 1100; feed = "Bloom 2.5ml, Cal-Mag 1ml, PK Bulk 0.5ml"; rh = "≤50%";
       } else if (days < 84) {
-        phase = "Flower Week 7";
-        ppfd = 1100;
-        feed = "Bloom 2.5ml, Cal-Mag 0.5ml, PK Bulk 0.25ml";
+        phase = "Flower Week 7"; ppfd = 1100; feed = "Bloom 2.5ml, Cal-Mag 0.5ml, PK Bulk 0.25ml"; rh = "≤50%";
       } else if (days < 91) {
-        phase = "Flower Week 8";
-        ppfd = 1100;
-        feed = "Bloom 2.5ml";
+        phase = "Flower Week 8"; ppfd = 1100; feed = "Bloom 2.5ml"; rh = "≤50%";
       } else {
-        phase = "Flush Week";
-        ppfd = 600;
-        feed = "Flush with pH'd water only";
+        phase = "Flush Week"; ppfd = 600; feed = "Flush with pH’d water only"; rh = "≤50%";
       }
 
-      // RH Status
-      if (days < 35 && rh < 50) {
-        rhStatus = `<span class="warning">RH too low for veg! Aim for >50%.</span>`;
-      } else if (days >= 35 && rh > 50) {
-        rhStatus = `<span class="warning">RH too high for flower! Keep ≤50%.</span>`;
-      } else {
-        rhStatus = `RH is fine for current stage.`;
-      }
-
-      // VPD Tips
-      if (leafTemp >= 25 && rh < 45) {
-        vpdAdvice = `VPD may be high. Consider raising RH or lowering temp.`;
-      } else if (leafTemp < 23 && rh > 60) {
-        vpdAdvice = `VPD may be too low. Consider increasing temp or reducing RH.`;
-      } else {
-        vpdAdvice = `VPD should be within safe range.`;
-      }
-
-      output.innerHTML = `
+      document.getElementById("growInfo").innerHTML = `
         <h2>${phase}</h2>
         <p><strong>Day:</strong> ${days}</p>
         <p><strong>PPFD Target:</strong> ${ppfd} µmol/m²/s</p>
         <p><strong>Feeding:</strong> ${feed}</p>
-        <p><strong>RH Check:</strong> ${rhStatus}</p>
-        <p><strong>Leaf Temp (est.):</strong> ${leafTemp.toFixed(1)}°C</p>
-        <p><strong>VPD Guidance:</strong> ${vpdAdvice}</p>
-        ${days === 56 ? "<p class='critical'>Reminder: Today is Flower Day 21. Perform full lollipop and defoliation.</p>" : ""}
+        <p><strong>RH Goal:</strong> ${rh}</p>
+        ${reminder}
+        <p style="margin-top:20px;"><button onclick="resetApp()">Reset Grow</button></p>
       `;
     }
+
+    function resetApp() {
+      localStorage.removeItem("vegStart");
+      location.reload();
+    }
+
+    // On page load
+    window.onload = showGrowInfo;
   </script>
 
 </body>
