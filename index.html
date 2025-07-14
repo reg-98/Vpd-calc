@@ -3,174 +3,170 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Grow App Toolkit</title>
+  <title>Grow App Toolkit – RH Simplified</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
       margin: 0;
-      padding: 2rem;
-      background: #f7f7f7;
-      color: #333;
+      padding: 20px;
+      background: #111;
+      color: #eee;
     }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 1rem;
+    h1, h2 {
+      color: #90ee90;
     }
-
     label {
       display: block;
-      margin-top: 1rem;
-      font-weight: bold;
+      margin-top: 12px;
     }
-
-    input {
-      padding: 0.5rem;
-      width: 100%;
-      max-width: 300px;
-      margin-bottom: 1rem;
-    }
-
-    button {
-      padding: 0.5rem 1rem;
-      margin-top: 1rem;
-      font-weight: bold;
-      background-color: #4CAF50;
-      color: white;
+    input, select, button {
+      padding: 8px;
+      margin-top: 4px;
       border: none;
-      cursor: pointer;
+      border-radius: 4px;
     }
-
-    .results {
-      margin-top: 2rem;
-      padding: 1rem;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    .section {
+      background: #222;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 10px;
     }
-
-    .advice {
-      margin-top: 1rem;
-      font-style: italic;
-    }
-
     .warning {
-      color: red;
+      color: #ffa500;
       font-weight: bold;
     }
-
-    .good {
-      color: green;
+    .critical {
+      color: #ff4d4d;
       font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <h1>Grow App Toolkit – VPD + PPFD Guide</h1>
 
-  <label for="temp">Air Temp (°C):</label>
-  <input type="number" id="temp" step="0.1" />
+  <h1>Grow App Toolkit</h1>
+  <div class="section">
+    <label for="vegStart">Veg Start Date:</label>
+    <input type="date" id="vegStart" />
 
-  <label for="rh">Relative Humidity (%):</label>
-  <input type="number" id="rh" step="0.1" />
+    <label for="currentDate">Today’s Date:</label>
+    <input type="date" id="currentDate" />
 
-  <button onclick="calculateVPD()">Calculate VPD</button>
+    <label for="temp">Current Air Temp (°C):</label>
+    <input type="number" id="temp" step="0.1" />
 
-  <div class="results" id="results" style="display:none;">
-    <p><strong>Grow Day:</strong> <span id="growDay"></span></p>
-    <p><strong>Stage:</strong> <span id="stage"></span></p>
-    <p><strong>Leaf Temp Used:</strong> <span id="leafTemp"></span>°C</p>
-    <p><strong>VPD:</strong> <span id="vpd"></span> kPa</p>
-    <p><strong>VPD Target:</strong> <span id="targetRange"></span></p>
-    <p><strong>PPFD Target:</strong> <span id="ppfdTarget"></span> µmol/m²/s</p>
-    <p class="advice" id="advice"></p>
+    <label for="rh">Current RH (%):</label>
+    <input type="number" id="rh" step="0.1" />
+
+    <button onclick="runApp()">Get Advice</button>
   </div>
 
+  <div id="output" class="section"></div>
+
   <script>
-    function calculateVPD() {
+    function runApp() {
+      const vegStart = new Date(document.getElementById("vegStart").value);
+      const currentDate = new Date(document.getElementById("currentDate").value);
       const temp = parseFloat(document.getElementById("temp").value);
       const rh = parseFloat(document.getElementById("rh").value);
-      const leafTemp = temp - 2.0;
+      const days = Math.floor((currentDate - vegStart) / (1000 * 60 * 60 * 24));
 
-      const flipDate = new Date("2025-07-12");
-      const today = new Date();
-      const timeDiff = today - flipDate;
-      const growDay = Math.floor(timeDiff / (1000 * 60 * 60 * 24)) + 1;
+      const output = document.getElementById("output");
+      let phase = "";
+      let ppfd = 0;
+      let feed = "";
+      let rhStatus = "";
+      let vpdAdvice = "";
 
-      let stage = "", targetLow, targetHigh, ppfd;
+      const leafTemp = temp - 2;
 
-      if (growDay <= 7) {
-        stage = "Flower Week 1 (Stretch Start)";
-        targetLow = 1.3; targetHigh = 1.5;
-        ppfd = "750–850";
-      } else if (growDay <= 14) {
-        stage = "Flower Week 2 (Peak Stretch)";
-        targetLow = 1.4; targetHigh = 1.6;
-        ppfd = "850–950";
-      } else if (growDay <= 21) {
-        stage = "Flower Week 3 (Bud Initiation)";
-        targetLow = 1.4; targetHigh = 1.6;
-        ppfd = "900–1000";
-      } else if (growDay <= 28) {
-        stage = "Flower Week 4 (Bulk Begins)";
-        targetLow = 1.5; targetHigh = 1.7;
-        ppfd = "950–1050";
-      } else if (growDay <= 35) {
-        stage = "Flower Week 5 (Peak Bulk)";
-        targetLow = 1.5; targetHigh = 1.7;
-        ppfd = "950–1050";
-      } else if (growDay <= 42) {
-        stage = "Flower Week 6 (Late Bloom)";
-        targetLow = 0.8; targetHigh = 1.0;
-        ppfd = "950–1000";
-      } else if (growDay <= 49) {
-        stage = "Flower Week 7 (Ripening)";
-        targetLow = 0.8; targetHigh = 1.0;
-        ppfd = "900–1000";
-      } else if (growDay <= 56) {
-        stage = "Flower Week 8 (Final Swell)";
-        targetLow = 0.8; targetHigh = 1.0;
-        ppfd = "850–950";
-      } else if (growDay <= 63) {
-        stage = "Flush Week";
-        targetLow = 0.8; targetHigh = 1.0;
-        ppfd = "700–800 (dimmed)";
+      if (days < 7) {
+        phase = "Veg Week 1";
+        ppfd = 300;
+        feed = "Root Stim 1ml, Cal-Mag 0.5ml";
+      } else if (days < 14) {
+        phase = "Veg Week 2";
+        ppfd = 400;
+        feed = "Root Stim 1ml, Grow 1ml, Cal-Mag 1ml";
+      } else if (days < 21) {
+        phase = "Veg Week 3";
+        ppfd = 600;
+        feed = "MEGAPOT ON – Root Stim 1ml, Grow 1.5ml, Cal-Mag 1ml";
+      } else if (days < 28) {
+        phase = "Veg Week 4";
+        ppfd = 800;
+        feed = "Root Stim 1ml, Grow 2ml, Cal-Mag 1ml";
+      } else if (days < 35) {
+        phase = "Veg Week 5 / Pre-Flower";
+        ppfd = 800;
+        feed = "Defoliate. Grow 2ml, Cal-Mag 1ml";
+      } else if (days < 42) {
+        phase = "Flower Week 1";
+        ppfd = 800;
+        feed = "Bloom 2ml, Cal-Mag 1ml";
+      } else if (days < 49) {
+        phase = "Flower Week 2";
+        ppfd = 1100;
+        feed = "Bloom 2.5ml, Cal-Mag 1ml, PK Bulk 0.25ml";
+      } else if (days < 56) {
+        phase = "Flower Week 3";
+        ppfd = 1100;
+        feed = "Cane + Lollipop. Bloom 2.5ml, Cal-Mag 1ml, PK Bulk 0.5ml";
+      } else if (days < 63) {
+        phase = "Flower Week 4";
+        ppfd = 1100;
+        feed = "Bloom 2.5ml, Cal-Mag 1ml, PK Bulk 0.5ml";
+      } else if (days < 70) {
+        phase = "Flower Week 5";
+        ppfd = 1100;
+        feed = "Bloom 2.5ml, Cal-Mag 1ml, PK Bulk 0.5ml";
+      } else if (days < 77) {
+        phase = "Flower Week 6";
+        ppfd = 1100;
+        feed = "Bloom 2.5ml, Cal-Mag 1ml, PK Bulk 0.5ml";
+      } else if (days < 84) {
+        phase = "Flower Week 7";
+        ppfd = 1100;
+        feed = "Bloom 2.5ml, Cal-Mag 0.5ml, PK Bulk 0.25ml";
+      } else if (days < 91) {
+        phase = "Flower Week 8";
+        ppfd = 1100;
+        feed = "Bloom 2.5ml";
       } else {
-        stage = "Post-Harvest / Reset";
-        targetLow = 0.0; targetHigh = 0.0;
-        ppfd = "Off";
+        phase = "Flush Week";
+        ppfd = 600;
+        feed = "Flush with pH'd water only";
       }
 
-      const svp = 0.6108 * Math.exp((17.27 * leafTemp) / (leafTemp + 237.3));
-      const avp = (rh / 100) * 0.6108 * Math.exp((17.27 * temp) / (temp + 237.3));
-      const vpd = parseFloat((svp - avp).toFixed(2));
-
-      let advice = "", status = "";
-      if (vpd < targetLow) {
-        status = "Too Low";
-        advice = `VPD is too low. Try decreasing RH or increasing temperature.`;
-      } else if (vpd > targetHigh) {
-        status = "Too High";
-        if (temp >= 28) {
-          advice = `VPD is too high. Increase RH since lowering temp may be hard.`;
-        } else {
-          advice = `VPD is too high. Try lowering temp or increasing RH.`;
-        }
+      // RH Status
+      if (days < 35 && rh < 50) {
+        rhStatus = `<span class="warning">RH too low for veg! Aim for >50%.</span>`;
+      } else if (days >= 35 && rh > 50) {
+        rhStatus = `<span class="warning">RH too high for flower! Keep ≤50%.</span>`;
       } else {
-        status = "Optimal";
-        advice = `VPD is in the ideal range for ${stage.toLowerCase()}.`;
+        rhStatus = `RH is fine for current stage.`;
       }
 
-      document.getElementById("results").style.display = "block";
-      document.getElementById("growDay").textContent = growDay;
-      document.getElementById("stage").textContent = stage;
-      document.getElementById("leafTemp").textContent = leafTemp.toFixed(1);
-      document.getElementById("vpd").textContent = `${vpd} (${status})`;
-      document.getElementById("targetRange").textContent = `${targetLow} – ${targetHigh} kPa`;
-      document.getElementById("ppfdTarget").textContent = ppfd;
-      document.getElementById("advice").textContent = advice;
-      document.getElementById("advice").className = vpd >= targetLow && vpd <= targetHigh ? "advice good" : "advice warning";
+      // VPD Tips
+      if (leafTemp >= 25 && rh < 45) {
+        vpdAdvice = `VPD may be high. Consider raising RH or lowering temp.`;
+      } else if (leafTemp < 23 && rh > 60) {
+        vpdAdvice = `VPD may be too low. Consider increasing temp or reducing RH.`;
+      } else {
+        vpdAdvice = `VPD should be within safe range.`;
+      }
+
+      output.innerHTML = `
+        <h2>${phase}</h2>
+        <p><strong>Day:</strong> ${days}</p>
+        <p><strong>PPFD Target:</strong> ${ppfd} µmol/m²/s</p>
+        <p><strong>Feeding:</strong> ${feed}</p>
+        <p><strong>RH Check:</strong> ${rhStatus}</p>
+        <p><strong>Leaf Temp (est.):</strong> ${leafTemp.toFixed(1)}°C</p>
+        <p><strong>VPD Guidance:</strong> ${vpdAdvice}</p>
+        ${days === 56 ? "<p class='critical'>Reminder: Today is Flower Day 21. Perform full lollipop and defoliation.</p>" : ""}
+      `;
     }
   </script>
+
 </body>
 </html>
