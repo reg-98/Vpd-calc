@@ -1,120 +1,269 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Grow Timeline App</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Position Size Calculator (EURUSD / GBPUSD / XAUUSD)</title>
   <style>
+    :root { --pad: 14px; --radius: 14px; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
-      background: #111;
-      color: #eee;
-      margin: 0;
-      padding: 20px;
+      font-family: -apple-system, system-ui, Segoe UI, Roboto, Arial, sans-serif;
+      margin: 0; background: #0b0c10; color: #e8e8ea;
     }
-    h1, h2 {
-      color: #90ee90;
+    .wrap { max-width: 760px; margin: 0 auto; padding: 18px; }
+    h1 { font-size: 18px; margin: 10px 0 14px; font-weight: 700; }
+    .card {
+      background: #12131a; border: 1px solid #1f2130;
+      border-radius: var(--radius); padding: var(--pad); margin: 12px 0;
     }
-    .section {
-      background: #222;
-      padding: 15px;
-      margin-bottom: 20px;
-      border-radius: 10px;
+    label { display: block; font-size: 12px; opacity: .9; margin-bottom: 6px; }
+    input, select, button {
+      width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #2a2d43;
+      background: #0f111a; color: #e8e8ea; outline: none;
+      font-size: 15px;
+      box-sizing: border-box;
     }
-    input, button {
-      padding: 8px;
-      margin-top: 6px;
-      border: none;
-      border-radius: 5px;
+    input:focus, select:focus { border-color: #6d7cff; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .btn {
+      background: #6d7cff; border: none; font-weight: 700; cursor: pointer;
     }
-    .warning { color: #ffa500; font-weight: bold; }
-    .critical { color: #ff4d4d; font-weight: bold; }
+    .btn:active { transform: translateY(1px); }
+    .muted { font-size: 12px; opacity: .75; line-height: 1.35; }
+    .out {
+      display: grid; gap: 10px;
+      grid-template-columns: 1fr 1fr;
+    }
+    .pill {
+      background: #0f111a; border: 1px solid #2a2d43; border-radius: 12px;
+      padding: 12px;
+    }
+    .pill b { display: block; font-size: 12px; opacity: .8; margin-bottom: 6px; }
+    .pill div { font-size: 18px; font-weight: 800; }
+    .warn { color: #ffcc66; }
+    .good { color: #7CFFB2; }
+    .bad { color: #ff7c7c; }
+    .tiny { font-size: 11px; opacity: .7; margin-top: 8px; }
+    .divider { height: 1px; background: #1f2130; margin: 12px 0; }
+    .switch {
+      display: flex; gap: 10px; align-items: center; margin-top: 8px;
+      font-size: 13px; opacity: .9;
+    }
+    .switch input { width: auto; transform: scale(1.2); }
   </style>
 </head>
 <body>
+  <div class="wrap">
+    <h1>Position Size Calculator</h1>
 
-  <h1>Grow Tracker</h1>
+    <div class="card">
+      <div class="row">
+        <div>
+          <label>Instrument</label>
+          <select id="instrument">
+            <option value="EURUSD">EURUSD</option>
+            <option value="GBPUSD">GBPUSD</option>
+            <option value="XAUUSD">XAUUSD (Gold)</option>
+          </select>
+        </div>
+        <div>
+          <label>Risk per trade (£)</label>
+          <input id="risk" type="number" step="0.01" placeholder="e.g. 5" value="5">
+        </div>
+      </div>
 
-  <div class="section" id="setup">
-    <label>Enter Veg Start Date:</label><br>
-    <input type="date" id="vegStartInput" />
-    <button onclick="saveStartDate()">Save Date</button>
+      <div class="row" style="margin-top:12px;">
+        <div>
+          <label id="stopLabel">Stop (pips)</label>
+          <input id="stop" type="number" step="0.1" placeholder="e.g. 20" value="20">
+          <div class="tiny" id="stopHint"></div>
+        </div>
+        <div>
+          <label>Lot step (rounding)</label>
+          <select id="lotStep">
+            <option value="0.01">0.01 (most brokers)</option>
+            <option value="0.001">0.001 (micro precision)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="row">
+        <div>
+          <label>Account currency handling</label>
+          <select id="ccyMode">
+            <option value="approx">Approx: treat £ ≈ $ (quick)</option>
+            <option value="gbpusd">Convert £→$ using GBPUSD rate</option>
+          </select>
+          <div class="switch">
+            <input id="useLive" type="checkbox" disabled>
+            <span class="muted">Live rates not available in this offline app — enter manually.</span>
+          </div>
+        </div>
+        <div>
+          <label>GBPUSD rate (only if converting)</label>
+          <input id="gbpusd" type="number" step="0.0001" placeholder="e.g. 1.2700" value="1.2700">
+        </div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <button class="btn" id="calcBtn">Calculate</button>
+      </div>
+
+      <div class="tiny muted">
+        FX pip value assumes USD-quoted pairs: <b>1.00 lot ≈ $10/pip</b>. Gold assumes: <b>0.01 lot = $0.10 per 0.01 move</b>.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="out">
+        <div class="pill">
+          <b>Suggested Lot Size</b>
+          <div id="lotOut">—</div>
+        </div>
+        <div class="pill">
+          <b>£ Loss at Stop (estimated)</b>
+          <div id="lossOut">—</div>
+        </div>
+        <div class="pill">
+          <b>Value per pip/point</b>
+          <div id="valueOut">—</div>
+        </div>
+        <div class="pill">
+          <b>Status</b>
+          <div id="statusOut">—</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="muted" id="explain">
+        Enter risk + stop. For EURUSD/GBPUSD use pips. For XAUUSD use price distance (e.g. 2.35).
+      </div>
+    </div>
   </div>
 
-  <div class="section" id="growInfo" style="display:none;"></div>
-
   <script>
-    function saveStartDate() {
-      const date = document.getElementById("vegStartInput").value;
-      if (date) {
-        localStorage.setItem("vegStart", date);
-        showGrowInfo();
-      }
+    const $ = (id) => document.getElementById(id);
+
+    function roundToStep(x, step) {
+      const s = Number(step);
+      return Math.max(0, Math.floor(x / s) * s);
     }
 
-    function showGrowInfo() {
-      const vegStart = localStorage.getItem("vegStart");
-      if (!vegStart) return;
+    function fmt(x, dp=2) {
+      if (!isFinite(x)) return "—";
+      return Number(x).toFixed(dp);
+    }
 
-      document.getElementById("setup").style.display = "none";
-      document.getElementById("growInfo").style.display = "block";
-
-      const start = new Date(vegStart);
-      const today = new Date();
-      const days = Math.floor((today - start) / (1000 * 60 * 60 * 24));
-
-      let phase = "", ppfd = 0, feed = "", rh = "", reminder = "";
-
-      if (days < 7) {
-        phase = "Veg Week 1"; ppfd = 300; feed = "Root Stim 1ml, Cal-Mag 0.5ml"; rh = ">50%";
-      } else if (days < 14) {
-        phase = "Veg Week 2"; ppfd = 400; feed = "Root Stim 1ml, Grow 1ml, Cal-Mag 1ml"; rh = ">50%";
-      } else if (days < 21) {
-        phase = "Veg Week 3"; ppfd = 600; feed = "MEGAPOT ON – Root Stim 1ml, Grow 1.5ml, Cal-Mag 1ml"; rh = ">50%";
-      } else if (days < 28) {
-        phase = "Veg Week 4"; ppfd = 800; feed = "Root Stim 1ml, Grow 2ml, Cal-Mag 1ml"; rh = ">50%";
-      } else if (days < 35) {
-        phase = "Veg Week 5 / Pre-Flower"; ppfd = 800; feed = "Defoliate. Grow 2ml, Cal-Mag 1ml"; rh = ">50%";
-      } else if (days < 42) {
-        phase = "Flower Week 1"; ppfd = 800; feed = "Bloom 2ml, Cal-Mag 1ml"; rh = "≤50%";
-      } else if (days < 49) {
-        phase = "Flower Week 2"; ppfd = 1100; feed = "Bloom 2.5ml, Cal-Mag 1ml, PK Bulk 0.25ml"; rh = "≤50%";
-      } else if (days < 56) {
-        phase = "Flower Week 3"; ppfd = 1100; feed = "Cane + Lollipop. Bloom 2.5ml, Cal-Mag 1ml, PK Bulk 0.5ml"; rh = "≤50%";
-        if (days === 56) reminder = "<p class='critical'>🌿 Today is Flower Day 21 – Full Lollipop & Defoliation</p>";
-      } else if (days < 63) {
-        phase = "Flower Week 4"; ppfd = 1100; feed = "Bloom 2.5ml, Cal-Mag 1ml, PK Bulk 0.5ml"; rh = "≤50%";
-      } else if (days < 70) {
-        phase = "Flower Week 5"; ppfd = 1100; feed = "Bloom 2.5ml, Cal-Mag 1ml, PK Bulk 0.5ml"; rh = "≤50%";
-      } else if (days < 77) {
-        phase = "Flower Week 6"; ppfd = 1100; feed = "Bloom 2.5ml, Cal-Mag 1ml, PK Bulk 0.5ml"; rh = "≤50%";
-      } else if (days < 84) {
-        phase = "Flower Week 7"; ppfd = 1100; feed = "Bloom 2.5ml, Cal-Mag 0.5ml, PK Bulk 0.25ml"; rh = "≤50%";
-      } else if (days < 91) {
-        phase = "Flower Week 8"; ppfd = 1100; feed = "Bloom 2.5ml"; rh = "≤50%";
+    function updateUIForInstrument() {
+      const inst = $("instrument").value;
+      if (inst === "XAUUSD") {
+        $("stopLabel").textContent = "Stop (price distance)";
+        $("stopHint").textContent = "Example: Entry 2045.50, SL 2043.20 → stop = 2.30";
+        $("stop").step = "0.01";
+        if ($("stop").value === "20") $("stop").value = "2.00";
       } else {
-        phase = "Flush Week"; ppfd = 600; feed = "Flush with pH’d water only"; rh = "≤50%";
+        $("stopLabel").textContent = "Stop (pips)";
+        $("stopHint").textContent = "Example: 18.5 means 18.5 pips";
+        $("stop").step = "0.1";
+        if ($("stop").value === "2.00") $("stop").value = "20";
+      }
+    }
+
+    function calc() {
+      const inst = $("instrument").value;
+      const riskGBP = Number($("risk").value);
+      const stop = Number($("stop").value);
+      const lotStep = Number($("lotStep").value);
+      const mode = $("ccyMode").value;
+      const gbpusd = Number($("gbpusd").value);
+
+      if (!(riskGBP > 0) || !(stop > 0)) {
+        $("statusOut").innerHTML = `<span class="bad">Enter risk + stop</span>`;
+        return;
       }
 
-      document.getElementById("growInfo").innerHTML = `
-        <h2>${phase}</h2>
-        <p><strong>Day:</strong> ${days}</p>
-        <p><strong>PPFD Target:</strong> ${ppfd} µmol/m²/s</p>
-        <p><strong>Feeding:</strong> ${feed}</p>
-        <p><strong>RH Goal:</strong> ${rh}</p>
-        ${reminder}
-        <p style="margin-top:20px;"><button onclick="resetApp()">Reset Grow</button></p>
-      `;
+      // Convert £ risk to $ risk if requested (more accurate for USD-quoted instruments)
+      let riskUSD = riskGBP;
+      if (mode === "gbpusd") {
+        if (!(gbpusd > 0.5 && gbpusd < 5)) {
+          $("statusOut").innerHTML = `<span class="bad">GBPUSD rate looks wrong</span>`;
+          return;
+        }
+        riskUSD = riskGBP * gbpusd;
+      }
+
+      let lotRaw = 0, valuePer = 0, lossGBP = 0;
+
+      if (inst === "EURUSD" || inst === "GBPUSD") {
+        // 1.00 lot ≈ $10 per pip
+        // lot = riskUSD / (stopPips * 10)
+        lotRaw = riskUSD / (stop * 10);
+        valuePer = lotRaw * 10; // $ per pip
+        const lossUSD = stop * (lotRaw * 10);
+        // convert back to £ for display if we converted
+        lossGBP = (mode === "gbpusd") ? (lossUSD / gbpusd) : lossUSD;
+      } else {
+        // XAUUSD assumptions:
+        // 0.01 lot => $0.10 per 0.01 move
+        // Therefore per 1.00 price move, 0.01 lot => $10
+        // So per 1.00 move, 1.00 lot => $1000
+        // lot = riskUSD / (stop * 1000)
+        lotRaw = riskUSD / (stop * 1000);
+        // Value per 0.01 move:
+        valuePer = lotRaw * 10; // because 1.00 lot = $10 per 0.01 move
+        const lossUSD = stop * (lotRaw * 1000);
+        lossGBP = (mode === "gbpusd") ? (lossUSD / gbpusd) : lossUSD;
+      }
+
+      const lotRounded = roundToStep(lotRaw, lotStep);
+
+      // Recompute displayed loss using rounded lot (so it matches what you'll actually place)
+      let lossUSD2 = 0, valuePer2 = 0;
+      if (inst === "EURUSD" || inst === "GBPUSD") {
+        valuePer2 = lotRounded * 10; // $/pip
+        lossUSD2 = stop * valuePer2;
+      } else {
+        valuePer2 = lotRounded * 10; // $ per 0.01 move
+        lossUSD2 = stop * (lotRounded * 1000);
+      }
+      const lossGBP2 = (mode === "gbpusd") ? (lossUSD2 / gbpusd) : lossUSD2;
+
+      $("lotOut").textContent = fmt(lotRounded, lotStep === 0.001 ? 3 : 2);
+      $("lossOut").textContent = "£" + fmt(lossGBP2, 2);
+
+      if (inst === "EURUSD" || inst === "GBPUSD") {
+        $("valueOut").textContent = "$" + fmt(valuePer2, 2) + " / pip";
+      } else {
+        $("valueOut").textContent = "$" + fmt(valuePer2, 2) + " per 0.01";
+      }
+
+      // Status checks
+      let status = `<span class="good">OK</span>`;
+      if (lotRounded <= 0) status = `<span class="bad">Too small (increase risk or smaller stop)</span>`;
+      if (lossGBP2 > riskGBP * 1.05) status = `<span class="warn">Rounding makes risk slightly higher</span>`;
+      $("statusOut").innerHTML = status;
+
+      // Explanation
+      let expl = "";
+      if (inst === "XAUUSD") {
+        expl = `Gold sizing uses: <b>Lot = Risk($) ÷ (Stop × 1000)</b>. Your stop is <b>${stop}</b> price units.`;
+      } else {
+        expl = `FX sizing uses: <b>Lot = Risk($) ÷ (Stop pips × 10)</b>. Your stop is <b>${stop}</b> pips.`;
+      }
+      expl += ` ${mode === "gbpusd" ? `Using GBPUSD <b>${gbpusd}</b> to convert £→$.` : `Using quick mode (£≈$).`}`;
+      $("explain").innerHTML = expl;
     }
 
-    function resetApp() {
-      localStorage.removeItem("vegStart");
-      location.reload();
-    }
+    $("instrument").addEventListener("change", () => { updateUIForInstrument(); calc(); });
+    $("calcBtn").addEventListener("click", calc);
+    ["risk","stop","lotStep","ccyMode","gbpusd"].forEach(id => $(id).addEventListener("input", calc));
 
-    // On page load
-    window.onload = showGrowInfo;
+    updateUIForInstrument();
+    calc();
   </script>
-
 </body>
 </html>
